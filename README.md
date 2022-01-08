@@ -4,7 +4,7 @@ This repo contains custom functions in the language M, which can be used in Powe
 
 | Project | Description |
 | --- | --- |
-| `Calendar` | A repo for M-code Standard and Financial Calendar |
+| [Calendar](https://github.com/PBIQueryous/M-Code/tree/main/Calendars) | A repo for M-code Standard and Financial Calendar |
 
 
 - [x] InDEV
