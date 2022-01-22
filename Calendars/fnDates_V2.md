@@ -5,12 +5,20 @@ let
   Source =  // fnDateTableSTART                   
   
     let
-      fnDateTable = (
+      fnDates = (
+        // Year start as number: yyyy
         varYearStart as number, 
+        
+        // Year end as number: yyyy
         varYearEnd as number, 
+        
+        // Fiscal start date: dd/mm/yyyy
         optional varFiscalDate as date, 
-        optional varFiscalMonthStart as number,
+        
+        // Fiscal start month: mm
         optional varHolidays as list, 
+        
+        // Add week stark by default 1 = Mon, 0 = Sun
         optional varWDStartNum as number
       ) as table =>
         // fnDateTableEND
@@ -22,7 +30,9 @@ let
   dateFiscalStart = Date.FromText(
     "1-" & Text.From(Date.Month(varFiscalDate)) & "-" & Text.From(Date.Year(varFiscalDate))
   ),
+  varFiscalMonthStart = Date.Month(varFiscalDate),
   dateFiscalEnd = Date.AddDays(Date.AddYears(dateFiscalStart, 1), - 1),
+  
   // ProperStartHere                  
   dateToday = DateTime.Date(DateTime.LocalNow()),
   dateLatestCompleteMTD = Date.AddDays(Date.StartOfMonth(DateTime.Date(DateTime.LocalNow())), - 1),
@@ -770,8 +780,14 @@ else Table.FromList(datesList, Splitter.SplitByNothing()),
     each if [MonthEnd] <= dateToday then true else false,
     type logical
   ),
-  YTDAdd1 = Table.AddColumn(
+    IsIncompleteMonth = Table.AddColumn(
     IsCompleteMonth,
+    "isIncompleteMonth",
+    each if [MonthEnd] > dateToday then true else false,
+    type logical
+  ),
+  YTDAdd1 = Table.AddColumn(
+    IsIncompleteMonth,
     "YTDAdd1",
     each if [MonthEnd] <= DateAdd1 then true else false,
     type logical
@@ -874,14 +890,14 @@ else Table.FromList(datesList, Splitter.SplitByNothing()),
     each if [offsetFiscalYear] = 0 then true else false,
     type logical
   ),
-  dateLastCompleteMonth = Table.AddColumn(
+  dateCompleteMonth = Table.AddColumn(
     addIsCurrentFY,
-    "latestCompleteMonth",
+    "CompleteMonthAdd0",
     each if [IsCompleteMonth] = true then [Date] else null,
     type date
   ),
   dateCompleteMonth1 = Table.AddColumn(
-    dateLastCompleteMonth,
+    dateCompleteMonth,
     "CompleteMonthAdd1",
     each if [YTDAdd1] = true then [Date] else null,
     type date
@@ -899,19 +915,21 @@ else Table.FromList(datesList, Splitter.SplitByNothing()),
     type date
   )
 in
-    dateCompleteMonth3 // QueryEND                                                       
+    dateCompleteMonth3
+    // QueryEND                                                       
+      
       , 
       // MetaData
       documentation = [
-        Documentation.Name = " fnDateTable", 
+        Documentation.Name = " fnDates", 
         Documentation.Description
-          = " Date table function to create an ISO-8601 calendar with additional columns for TVCA Group analytics ", 
+          = " Date table function: Creates ISO-8601 calendar with Fiscal Calendar ", 
         Documentation.LongDescription
-          = " Date table function to create an Standard and Fiscal Calendar with additional columns for TVCA Group analytics ", 
+          = " Date table function: Creates ISO-8601 calendar with Fiscal Calendar ", 
         Documentation.Category = " Dates Table", 
         Documentation.Version
-          = " 01-12-2021 ", 
-        Documentation.Source = " local", 
+          = " 22-01-2022 ", 
+        Documentation.Source = " remote ", 
         Documentation.Author = " Imran Haq", 
         Documentation.Examples = {
           [
@@ -919,21 +937,21 @@ in
               = " Inspired by Melissa Koarte at Enterprise DNA - See: https://forum.enterprisedna.co/t/extended-date-table-power-query-m-function/6390", 
             Code
               = " Optional paramters: #(lf)
-      (FYStartMonthNum) Month number the fiscal year starts, January if omitted #(lf) 
-      (Holidays) Select a query (and column) that contains a list of holiday dates #(lf) 
-      (WDStartNum) Switch default weekday numbering from 0-6 to 1-7 by entering a 1 #(lf)
+      (varFiscalMonthStart) Month number the fiscal year starts, January if omitted #(lf) 
+      (varHolidays) Select a query (and column) that contains a list of holiday dates #(lf) 
+      (varWDStartNum) Switch default weekday numbering from 0-6 to 1-7 by entering a 1 #(lf)
       #(lf)
       Important to note: #(lf)
       [Fiscal Week] starts on a Monday and can contain less than 7 days in a First- and/or Last Week of a FY #(lf)
-      [IsWorkingDay] does not take holiday dates into account  #(lf)
-      [IsBusinessDay] does take optional holiday dates into account  #(lf)
-      [IsPYTD] and [IsPFYTD] compare Previous [Day of Year] with the Current [Day of Year] number, so dates don't align in leap years", 
+      [isWorkingDay] does not take holiday dates into account  #(lf)
+      [isBusinessDay] does take optional holiday dates into account  #(lf)
+      [isPrevYTD] and [issPrevFiscalYTD] compare Previous [DayOfYear] with the Current [DayOfYear] number, so dates don't align in leap years", 
             Result = " "
           ]
         }
       ]
     in
-      Value.ReplaceType(fnDateTable, Value.ReplaceMetadata(Value.Type(fnDateTable), documentation))
+      Value.ReplaceType(fnDates, Value.ReplaceMetadata(Value.Type(fnDates), documentation))
 // MetaData
 in Source
 
