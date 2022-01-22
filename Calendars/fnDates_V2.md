@@ -1,7 +1,6 @@
 ## fnDates_V2
 
 ```c#
-
 let
   Source =  // fnDateTableSTART                   
   
