@@ -21,6 +21,6 @@ Table.TransformColumnTypes(
     Table.AddColumn(
       Source,
       "NewColumn", 
-      each Text.Select( [SourceColumn], {"a".."z"})),
+      each Text.Select( [SourceColumn], {"a".."z", "A".."Z"})),
 {{"SourceColumn", type text}})
 ```
