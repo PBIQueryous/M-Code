@@ -15,7 +15,7 @@ Table.TransformColumnTypes(
 {{"SourceColumn", Int64.Type}})
 ```
 
-## Extract Numbers: template
+## Extract Text: template
 ```c#
 Table.TransformColumnTypes(
     Table.AddColumn(
