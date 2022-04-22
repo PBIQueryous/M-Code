@@ -4,7 +4,7 @@
 let
     // --- Function segment ---
     // Author: Imran Haq (PBI Queryous)
-    output = //fnGetUniques
+    output = //fnFunctionName
         (input as list) as table =>
     let
         step1 = "PowerQueryFunctionsHere"
