@@ -10,7 +10,7 @@ let
         step1 = "PowerQueryFunctionsHere"
     in
         step1
-        ,                                                            // Output from inner steps     
+        ,                                                                
     // --- Documentation segment ---
     documentation = [
     Documentation.Name = " fnGetUniques ", 
@@ -25,11 +25,11 @@ let
   ]
     // --- Output ---
 in
-    Value.ReplaceType(                                                // Replace type of the value           
-        output,                                                       // Function caller
-        Value.ReplaceMetadata(                                        // Replace metadata of the function
-            Value.Type(output),                                       // Return output type of function               
-            documentation                                             // Documentation assigment
+    Value.ReplaceType(                                                           
+        output,                                                       
+        Value.ReplaceMetadata(                                        
+            Value.Type(output),                                                   
+            documentation                                             
         )
     )
 ```
