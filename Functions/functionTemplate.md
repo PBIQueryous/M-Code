@@ -44,7 +44,7 @@ let
             meta 
             [
               Documentation.FieldCaption     = " Choose Separator Type ", 
-              Documentation.FieldDescription = "Field Description", 
+              Documentation.FieldDescription = " Recommended to use #(lf) forward slash / ", 
               Documentation.AllowedValues    = {"-", "/"}
             ]
         )
