@@ -43,7 +43,7 @@ let
           type text
             meta 
             [
-              Documentation.FieldCaption     = " New Field Caption", 
+              Documentation.FieldCaption     = " Choose Separator Type ", 
               Documentation.FieldDescription = "Field Description", 
               Documentation.AllowedValues    = {"-", "/"}
             ]
