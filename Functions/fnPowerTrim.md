@@ -1,5 +1,6 @@
 # fnPowerTrim
 ### function to trim spaces and/or special characters
+#### Credit to: [Ivan Bondarenko | fnPowerTrim](https://gist.github.com/IvanBond/de5d947421fbfaaf0e8e45c628b01836)
 
 ```c#
 let
