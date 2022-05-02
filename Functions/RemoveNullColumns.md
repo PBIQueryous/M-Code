@@ -1,5 +1,5 @@
 # Remove all Null Columns
-## Scans previous step (as table) and dynamically removes all completely null columns
+### Scans previous step (as table) and dynamically removes all completely null columns
 
 ```c#
 = Table.SelectColumns(Source, 
