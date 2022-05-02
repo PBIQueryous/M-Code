@@ -6,9 +6,8 @@ This repo contains custom (template) functions in the language M, which can be u
 | --- | --- |
 | [Calendar](https://github.com/PBIQueryous/M-Code/tree/main/Calendars) | M-code Standard and Financial Calendar |
 | [Functions](https://github.com/PBIQueryous/M-Code/tree/main/Functions) | M-code related transformations and functions |
-| [Functions](https://github.com/PBIQueryous/M-Code/tree/main/Functions) | M-code related transformations and functions |
-| [Functions](https://github.com/PBIQueryous/M-Code/tree/main/Functions) | M-code related transformations and functions |
-| [Functions](https://github.com/PBIQueryous/M-Code/tree/main/Functions) | M-code related transformations and functions |
+| [Templates](https://github.com/PBIQueryous/M-Code/tree/main/Functions/Templates) | M-code templates for functions |
+
 
 
 - [x] InDEV
