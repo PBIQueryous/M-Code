@@ -1,10 +1,10 @@
-# fnSpacesTrim
+# fnTrimSpaces
 ### PowerQuery function
 ##### Function to trim leading spaces, trailing spaces and/or double (or more) spaces
 
 ```C#
 let
-  fn =  // fnSpacesTrim                 
+  fn =  // fnTrimSpaces                 
 /* ------------------------------ 
   Author: Imran Haq - PBI QUERYOUS
   GitHub: https://github.com/PBIQueryous/M-Code/tree/main/Functions
@@ -48,7 +48,7 @@ let
       documentation = 
       [  
 
-          Documentation.Name = " fnCleanSpaces ", 
+          Documentation.Name = " fnTrimSpaces ", 
           Documentation.Description = " Cleans leading/trailing and double spaces ", 
           Documentation.LongDescription = " Cleans leading/trailing and double spaces ", 
           Documentation.Category = " Trim (columns) ", 
