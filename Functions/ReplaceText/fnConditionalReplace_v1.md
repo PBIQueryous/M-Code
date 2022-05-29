@@ -1,6 +1,12 @@
 # Replace Text
 ### several templates for replacing text, conditional and multiple
 
+###### nb: 
+`Replacer.ReplaceText` = replaces strings and substrings
+`Replacer.ReplaceValue` = replaces entire cell contents only
+
+
+
 ```c#
 = Table.TransformColumns(#”Changed Type”, {“FieldBeingChanged”, each if _ null then “New Value” else “Old Value”})
 ```
