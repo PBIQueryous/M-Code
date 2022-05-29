@@ -3,6 +3,7 @@
 ```js
 let
   Source = Adviser, 
+  // select columns and generate list of code
   selectColumns = Table.SelectColumns(
     Source, 
     {
@@ -19,6 +20,7 @@ let
       "Career Aspiration3"
     }
   ),
+  // use previous list of columns to select columns for List.Zip function
   listZipColumns = 
   {
       "Primary Sector Job/Profession", 
@@ -62,6 +64,7 @@ let
     )
   ), 
   removeGroupColumns = Table.RemoveColumns(
+    // use previous var listZipColumns as list argument to remove those columns as no longer needed
     addListZip, listZipColumns
   ), 
   expandLists = Table.ExpandListColumn(removeGroupColumns, "Custom"), 
@@ -69,12 +72,12 @@ let
     expandLists, 
     {"Custom", each Text.Combine(List.Transform(_, Text.From), ";"), type text}
   ), 
-    // Split lists by delimiter
+    // Split lists by delimiter - remember to rename columns within code here
     splitColumns = Table.SplitColumn(
     expandValues, 
     "Custom", 
     Splitter.SplitTextByDelimiter(";", QuoteStyle.Csv), 
-    {
+    {  // rename columns
         "Primary/Secondary/Terciary", 
         "Sector", 
         "Aspiration"
