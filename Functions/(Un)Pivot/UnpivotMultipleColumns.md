@@ -18,7 +18,16 @@ let
       "Third Sector Job/Profession", 
       "Career Aspiration3"
     }
-  ), 
+  ),
+  listZipColumns = 
+  {
+      "Primary Sector Job/Profession", 
+      "Primary Career Aspiration", 
+      "Second Sector Job/Profession", 
+      "Career Aspiration2", 
+      "Third Sector Job/Profession", 
+      "Career Aspiration3"
+  }, 
   addListZip = Table.AddColumn(
     selectColumns, 
     "Custom", 
@@ -53,15 +62,7 @@ let
     )
   ), 
   removeGroupColumns = Table.RemoveColumns(
-    addListZip, 
-    {
-      "Primary Sector Job/Profession", 
-      "Primary Career Aspiration", 
-      "Second Sector Job/Profession", 
-      "Career Aspiration2", 
-      "Third Sector Job/Profession", 
-      "Career Aspiration3"
-    }
+    addListZip, listZipColumns
   ), 
   expandLists = Table.ExpandListColumn(removeGroupColumns, "Custom"), 
   expandValues = Table.TransformColumns(
