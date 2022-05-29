@@ -2,33 +2,33 @@
 
 ```js
 let
-  Source = Adviser, 
+  Source = DataTable, 
   // select columns and generate list of code
   selectColumns = Table.SelectColumns(
     Source, 
     {
-      "School Code", 
+      "School", 
       "FileName", 
       "ID", 
-      "Cycle?", 
-      "Student", 
-      "Primary Sector Job/Profession", 
+      "Term", 
+      "Student",
+      "Primary Sector Job", 
       "Primary Career Aspiration", 
-      "Second Sector Job/Profession", 
-      "Career Aspiration2", 
-      "Third Sector Job/Profession", 
-      "Career Aspiration3"
+      "Secondary Sector Job", 
+      "Secondary Career Aspiration", 
+      "Terciary Sector Job", 
+      "Terciary Career Aspiration"
     }
   ),
   // use previous list of columns to select columns for List.Zip function
   listZipColumns = 
   {
-      "Primary Sector Job/Profession", 
+      "Primary Sector Job", 
       "Primary Career Aspiration", 
-      "Second Sector Job/Profession", 
-      "Career Aspiration2", 
-      "Third Sector Job/Profession", 
-      "Career Aspiration3"
+      "Secondary Sector Job", 
+      "Secondary Career Aspiration", 
+      "Terciary Sector Job", 
+      "Terciary Career Aspiration"
   }, 
   addListZip = Table.AddColumn(
     selectColumns, 
@@ -37,20 +37,20 @@ let
       // Group 1 - Attributes
       {
         {"Primary", 
-        "Second", 
-        "Third"
+        "Secondary", 
+        "Terciary"
       }, 
         // Group 2 - Values 1
         {
-          [#"Primary Sector Job/Profession"], 
-          [#"Second Sector Job/Profession"], 
-          [#"Third Sector Job/Profession"]
+          [Primary Career Job], 
+          [Secondary Career Job], 
+          [Terciary Career Job]
         }, 
             // Group 3 - Values 2
             {
               [Primary Career Aspiration],
-              [Career Aspiration2], 
-              [Career Aspiration3]
+              [Secondary Career Aspiration], 
+              [Terciary Career Aspiration]
             }
       // add additional column groups as list (as required)
               /* , 
