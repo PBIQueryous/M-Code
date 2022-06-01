@@ -40,6 +40,9 @@ let
               Documentation.FieldCaption     = " Select Column: #(lf) Trim Text in Column ", 
               Documentation.FieldDescription = " Select Column to Trim #(lf) eg: Column1 ",
               Documentation.SampleValues = {"Column1"}
+              // or Documentation.AllowedValues = {"Text1", "Text2", "Etc"} for multiple values in dropdown
+              // Formatting.IsMultiLine = true, for text box with multiple-code lines (eg: for native queries)
+              // Formatting.IsCode = true, formats text into coding style
             ]
         )
       ) as list,
