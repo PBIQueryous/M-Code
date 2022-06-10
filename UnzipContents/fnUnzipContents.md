@@ -1,3 +1,5 @@
+
+## function code
 ```js
 (ZIPFile) =>
 let
@@ -36,4 +38,13 @@ let
     )
 in
     Table.FromRecords(Entries)
+```
+
+## invoke function
+```js
+let
+    Source = File.Contents("[Full path to your zip file]"),
+    Files = UnzipContents(Source)
+in
+    Files
 ```
