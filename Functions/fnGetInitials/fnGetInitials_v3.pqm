@@ -1,0 +1,18 @@
+Table.AddColumn(Custom, "Prov1", each let
+      x = "", 
+      xx = each Text.Start(_, 1),
+      y = 
+      Text.Replace(
+      Text.Replace(
+      Text.Replace([ProviderName], 
+          " and ", x), 
+          " of ", x),
+          "The ", x),  
+      z = Text.Combine(List.Transform(Text.Split(y, " "), xx), ""),
+      zz1 = Text.Start(Text.Replace([ProviderName], " ", ""), 3),
+      zz2 = Text.Start(Text.Replace([ProviderName], " ", ""), 5),
+      zzz = if( Text.Length( Text.BeforeDelimiter([ProviderName], " ", 0)) >= 6) then 5 else 3,
+      zz3 = Text.Start(Text.Replace([ProviderName], " ", ""), zzz)
+    in
+       zz3 & "-" & z , 
+       type text)
