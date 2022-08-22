@@ -1,4 +1,8 @@
+# fnGetCalendarMonth
+### PowerQuery function
+##### Function to retrieve Calendar Month for a list of Fiscal Periods ordered by Fiscal Start Month
 
+```C#
 
 let
   fn =  // fnFiscalPeriodToMonth
@@ -88,3 +92,5 @@ let
       parameterDocumentation      /* <-- Choose final documentation type */
 in
   fn
+
+```
