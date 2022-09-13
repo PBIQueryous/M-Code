@@ -3,43 +3,53 @@
 
 ```c#
 let
-  function1 =  // fnFunctionName                 
+  customFunction =  // fnReplaceBlanksRemoveNulls                 
 /* ------------------------------ 
   Author: Imran Haq - PBI QUERYOUS
-  Description: 
+  Description: fnReplaceBlanksRemoveNulls
  ---------------------------------*/
 
-// invoke function & define parameter inputs
+// 1.0: invoke function & define parameter inputs
     let
-      invokeFunction = (dataInput as text, optional separator as text) =>
+      invokeFunction = (inputTable as table) =>
         
 // ------------------------------------------------------------------
-// function transformations
-        let    
-          extractDate = Date.From(
-            Text.Start(Text.Select(Text.From(dataInput), {"0" .. "9"}), 2)
-              & separator
-              & Text.Middle(Text.Select(Text.From(dataInput), {"0" .. "9"}), 2, 2)
-              & separator
-              & Text.End(Text.Select(Text.From(dataInput), {"0" .. "9"}), 2)
-          ),
-          functionOutput = extractDate
-        in
-          functionOutput, 
+// 2.0: function transformations
+    let
+      source = inputTable, 
+      headers = Table.ColumnNames(source), 
+      replacer = Table.ReplaceValue(source, "", null, Replacer.ReplaceValue, headers), 
+      cleanser = Table.SelectColumns(
+        Table.SelectRows(
+          replacer, 
+          each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))
+        ), 
+        List.Select(
+          Table.ColumnNames(replacer), 
+          each List.NonNullCount(Table.Column(replacer, _)) <> 0
+        )
+      )
+    in
+      cleanser
+    , 
 
 // ------------------------------------------------------------------     
-// change parameter metadata here
+// 3.0: change parameter metadata here
       fnType = type function (
+        // 3.0.1: first parameter
         dataInput as (
           type text
             meta 
             [
-              Documentation.FieldCaption     = " type text: #(lf) see example in field ", 
-              Documentation.FieldDescription = " type a dummy integer date #(lf) eg: 31122022 ",
-              Documentation.SampleValues = {31122022}
+              Documentation.FieldCaption     = " Select Query: #(lf) Or input previous step ", 
+              Documentation.FieldDescription = " Select Query/Step: #(cr,lf) Or input previous step ",
+              Documentation.SampleValues = {"Table/Step"}
             ]
-        ), 
-        optional separator as (
+        )
+       
+        // 3.0.2: second parameter
+        /* ,
+         optional separator as (
           type text
             meta 
             [
@@ -48,35 +58,50 @@ let
               Documentation.AllowedValues    = {"-", "/"}
             ]
         )
-      ) as list,
+      )  */
+   // 3.1: parameter return type   
+    ) as list,
 // ------------------------------------------------------------------
-// edit function metadata here
+// 4.0: edit function metadata here
       documentation = 
       [  
 
-          Documentation.Name = " function name ", 
-          Documentation.Description = " Description ", 
-          Documentation.LongDescription = " Long Description ", 
-          Documentation.Category = " Function Category ", 
+          Documentation.Name = " fnReplaceBlanksRemoveNulls ", 
+          Documentation.Description = " Replaces blanks and removes null rows and columns ", 
+          Documentation.LongDescription = " Replaces blanks and removes null rows and columns ", 
+          Documentation.Category = " ETL Category ", 
           Documentation.Source = "  PBIQUERYOUS  ", 
           Documentation.Version = " 1.0 ", 
           Documentation.Author = " Imran Haq ", 
           Documentation.Examples = 
           {
             [
+            Description = "  Replaces blanks and removes null rows and columns   ",
+            Code    = " fnReplaceBlanksRemoveNulls( prevStep ) ", 
+            Result  = 
+"
+ 1. Takes previous step
+ 2. Replaces blanks with nulls
+ 3. Removes null rows and columns
+ 
+"
+
+            ]
+            /* ,
+            [
             Description = "  description   ",
             Code    = " code ", 
-            Result  = " result #(lf) new line
-                      #(lf) new line #(lf) 2 "
-            ]
+            Result  = " result #(cr,lf) new line
+                      #(cr,lf) new line #(cr,lf) 2 "
+            ] */
           }
        
       ]
        ,
        
 // ------------------------------------------------------------------
-// Choose between Parameter Documentation or Function Documentation
-      funtionDocumentation =      // -- function metadata
+// 5.0: Choose between Parameter Documentation or Function Documentation
+      functionDocumentation =      // -- function metadata
       Value.ReplaceType(invokeFunction, Value.ReplaceMetadata(Value.Type(invokeFunction), documentation)),
       
       parameterDocumentation =    // -- parameter metadata
@@ -84,7 +109,7 @@ let
     in
 // ------------------------------------------------------------------
 // select one of the above steps and paste below
-      parameterDocumentation      /* <-- Choose final documentation type */
+      functionDocumentation      /* <-- Choose final documentation type */
 in
-  function1
+  customFunction
   ```
