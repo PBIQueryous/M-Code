@@ -102,14 +102,21 @@ let
 // ------------------------------------------------------------------
 // 5.0: Choose between Parameter Documentation or Function Documentation
       functionDocumentation =      // -- function metadata
-      Value.ReplaceType(invokeFunction, Value.ReplaceMetadata(Value.Type(invokeFunction), documentation)),
+      Value.ReplaceType(invokeFunction, Value.ReplaceMetadata( Value.Type(invokeFunction), documentation)),
       
       parameterDocumentation =    // -- parameter metadata
-      Value.ReplaceType(invokeFunction, fnType) 
+      Value.ReplaceType(invokeFunction, fnType),
+      
+      replaceMeta =               // -- both metas
+        Value.ReplaceType(
+          Value.ReplaceType( invokeFunction, fnType ),
+          Value.ReplaceMetadata( Value.Type(invokeFunction), documentation)
+        ) 
     in
 // ------------------------------------------------------------------
 // select one of the above steps and paste below
-      functionDocumentation      /* <-- Choose final documentation type */
+      replaceMeta      /* <-- Choose final documentation type */
+      
 in
   customFunction
   ```
