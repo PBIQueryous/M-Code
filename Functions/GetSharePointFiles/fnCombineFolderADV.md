@@ -152,8 +152,8 @@ let
           type text
             meta 
             [
-              Documentation.FieldCaption     = " SharePoint filepath URL ", 
-              Documentation.FieldDescription = " Full SharePoint filepath URL #(lf) e.g., https://tvca1.sharepoint.com/sites/PowerBIUserGroup-DeveloperResources/Shared%20Documents/Developer%20Resources/_Learning%20Material/AdventureWorks/Product.csv",
+              Documentation.FieldCaption     = " SharePoint folder path URL ", 
+              Documentation.FieldDescription = " Full SharePoint folder path URL #(lf) e.g., https://tvca1.sharepoint.com/sites/PowerBIUserGroup-DeveloperResources/Shared%20Documents/Developer%20Resources/",
               Documentation.SampleValues = {"URL from SP details pane"}
             ]
         )
