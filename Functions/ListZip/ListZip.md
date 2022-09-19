@@ -17,9 +17,13 @@
     "Custom",
     each List.Zip(
 
-      // Group 1 - Attributes (list of lists)                   
+      // Group 1 - Attributes (list of lists) // list1 (list of attributes)                  
       {
-        {"Primary", "Second", "Third"}, // list1 (list of attributes)
+        {
+          "Primary", 
+          "Second", 
+          "Third"
+        }, 
         
         // Group 2 - Values 1           // list2 (list columns in order)                 
         {
@@ -27,22 +31,27 @@
           [#"Second Sector Job/Profession"],
           [#"Third Sector Job/Profession"]
         },
+        
         // Group 3 - Values 2           // list3 (list columns in order)          
-        {[Primary Career Aspiration], [Career Aspiration2], [Career Aspiration3]}
+        {
+          [Primary Career Aspiration], 
+          [Career Aspiration2], 
+          [Career Aspiration3]
+        }
+      
       // add additional column groups as list (as required)                                                     
       /* , 
-              * {
-              *   [ColumnGroupC1]
-              *   [ColumnGroupC2]
-              *   [ColumnGroupC3]
-              * }
-              */
+      * {
+      *   [ColumnGroupC1]
+      *   [ColumnGroupC2]
+      *   [ColumnGroupC3]
+      * }
+      */
       }
     )
   ),
-  removeGroupColumns = Table.RemoveColumns(
-
-    // use previous var listZipColumns as list argument to remove those columns as no longer needed                                                                                               
+  // use previous var listZipColumns as list argument to remove those columns as no longer needed
+  removeGroupColumns = Table.RemoveColumns(                                                                                                
     addListZip,
     listZipColumns
   )
