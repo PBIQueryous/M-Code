@@ -3,13 +3,21 @@
 
 ```C#
 let
-    Source = let
-  func = 
-    // fnGetSharepointFile
+  customFunction =  // fnGetFolder                 
+/* ------------------------------ 
+  Author: Imran Haq - PBI QUERYOUS
+  Description: fnGetFolder
+ ---------------------------------*/
+
+// 1.0: invoke function & define parameter inputs
     let
-      Source = (FullPath as text, optional SPSites as text, optional SPTeamName as text) => 
-        let
-          // Helper function
+      invokeFunction = (FullPath as text, optional SPSites as text, optional SPTeamName as text) =>
+      
+        
+// ------------------------------------------------------------------
+// 2.0: function transformations
+    let
+      // Helper function
           fnUriUnescapeString = 
             //Source: https://stackoverflow.com/questions/36242695/how-to-decodeuricomponent-ex-2f3f263d
           (data as text) as text => 
@@ -50,7 +58,7 @@ let
           /* extract Full URL Path to dynamically obtain SharePoint root path
           can be overwritten with manual input in function Parameters */
           getSPName = Text.BeforeDelimiter( FullPath , "/", 3 ) & "/",
-          useSPName = if SPSites = null then getSPName else SPSites,
+          useSPName = if SPSites = null then getSPName else SPSites & "/sites/",
           getString = Text.BetweenDelimiters(FullPath, "/sites/", "/"), 
           useString = if SPTeamName = null then getString else SPTeamName,
           // Parse FullPATH end --//
@@ -73,24 +81,105 @@ let
               StaticRoot, 
               (state, current) => state{[Name = current]}[Content]
             ),
-          #"Filtered Rows" = Table.SelectRows(NavigateIn, each ([Name] = FileName))[Content]{0}
+          filterRows = Table.SelectRows(NavigateIn, each ([Name] = FileName))[Content]{0}
         in
-          #"Filtered Rows"
+          filterRows
+    , 
+
+// ------------------------------------------------------------------     
+// 3.0: change parameter metadata here
+      fnType = type function (
+        // 3.0.1: first parameter
+        dataInput as (
+          type text
+            meta 
+            [
+              Documentation.FieldCaption     = " SharePoint filepath URL ", 
+              Documentation.FieldDescription = " Full SharePoint filepath URL #(lf) e.g., https://tvca1.sharepoint.com/sites/PowerBIUserGroup-DeveloperResources/Shared%20Documents/Developer%20Resources/_Learning%20Material/AdventureWorks/Product.csv",
+              Documentation.SampleValues = {"URL from SP details pane"}
+            ]
+        )
+       
+        // 3.0.2: second parameter
+        ,
+         optional SPSites as (
+          type text
+            meta 
+            [
+              Documentation.FieldCaption     = " SharePoint Base URL ", 
+              Documentation.FieldDescription = " SharePoint Base URL string #(lf) e.g., https://tvca1.sharepoint.com ", 
+              Documentation.SampleValues    = {"https://tvca1.sharepoint.com"}
+            ]
+        )
+         // 3.0.3: third parameter
+        ,
+        optional SPTeamName as (
+          type text
+            meta 
+            [
+              Documentation.FieldCaption     = " SharePoint Team Name ", 
+              Documentation.FieldDescription = " Team Name as it appears in SharePoint #(lf) e.g., PowerBIUserGroup-DeveloperResources ", 
+              Documentation.SampleValues    = {"TVCAShareDrive"}
+            ]
+        ) 
+   // 3.1: parameter return type   
+    ) as list,
+// ------------------------------------------------------------------
+// 4.0: edit function metadata here
+      documentation = 
+      [  
+
+          Documentation.Name = " fnGetFolder ", 
+          Documentation.Description = " Extract file(s) or folder(s) from SharePoint ", 
+          Documentation.LongDescription = " Extract file(s) or folder(s) from SharePoint ", 
+          Documentation.Category = " ETL Category ", 
+          Documentation.Source = "  PBIQUERYOUS  ", 
+          Documentation.Version = " 1.0 ", 
+          Documentation.Author = " Imran Haq ", 
+          Documentation.Examples = 
+          {
+            [
+            Description = "  Extract file(s) or folder(s) from SharePoint   ",
+            Code    = " fnGetSharePointFile( FullPath, SPSites, SPTeamName ) ", 
+            Result  = 
+"
+ 1. Input SharePoint URL (from Details pane)
+ 2. Input base SharePoint Sites URL
+ 3. Input SharePoint Team Name
+
+"
+
+            ]
+            /* ,
+            [
+            Description = "  description   ",
+            Code    = " code ", 
+            Result  = " result #(cr,lf) new line
+                      #(cr,lf) new line #(cr,lf) 2 "
+            ] */
+          }
+       
+      ]
+       ,
+       
+// ------------------------------------------------------------------
+// 5.0: Choose between Parameter Documentation or Function Documentation
+      functionDocumentation =      // -- function metadata
+      Value.ReplaceType(invokeFunction, Value.ReplaceMetadata( Value.Type(invokeFunction), documentation)),
+      
+      parameterDocumentation =    // -- parameter metadata
+      Value.ReplaceType(invokeFunction, fnType),
+      
+      replaceMeta =               // -- both metas
+        Value.ReplaceType(
+          Value.ReplaceType( invokeFunction, fnType ),
+          Value.ReplaceMetadata( Value.Type(invokeFunction), documentation)
+        ) 
     in
-      Source,
-  documentation = [
-    Documentation.Name = " Sharepoint.GetFile ", 
-    Documentation.Description = " Convenient way to get SP file by entering full URL. ", 
-    Documentation.LongDescription
-      = " Convenient way to get SP file by entering full URL. !! Root path to SP file has to be hardcoded in the function code itself !! ", 
-    Documentation.Category = " Accessing Data Functions ", 
-    Documentation.Source = "  www.TheBIccountant.com, see:  https://wp.me/p6lgsG-2kR .  ", 
-    Documentation.Version = " 1.2: 30-Mar-2021-ImprovedSpeed ", 
-    Documentation.Author = " Imke Feldmann ", 
-    Documentation.Examples = {[Description = "  ", Code = "  ", Result = "  "]}
-  ]
+// ------------------------------------------------------------------
+// select one of the above steps and paste below
+      parameterDocumentation      /* <-- Choose final documentation type */
+      
 in
-  Value.ReplaceType(func, Value.ReplaceMetadata(Value.Type(func), documentation))
-in
-    Source
+  customFunction
 ```
