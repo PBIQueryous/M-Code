@@ -7,6 +7,8 @@ let
 /* ------------------------------ 
   Author: Imran Haq - PBI QUERYOUS
   Description: fnGetSharePointFile
+  Acknowledgements & Inspiration: Imke Feldmann
+  The BIccountant - https://www.thebiccountant.com/
  ---------------------------------*/
 
 // 1.0: invoke function & define parameter inputs
@@ -133,7 +135,7 @@ let
           Documentation.Category = " ETL Category ", 
           Documentation.Source = "  PBIQUERYOUS  ", 
           Documentation.Version = " 1.0 ", 
-          Documentation.Author = " Imran Haq ", 
+          Documentation.Author = " Imke Feldmann - The BIccountant (https://www.thebiccountant.com/about/) ", 
           Documentation.Examples = 
           {
             [
