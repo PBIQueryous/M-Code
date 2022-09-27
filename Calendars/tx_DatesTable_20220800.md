@@ -3,15 +3,16 @@
 ### Author: Enterpise DNA
 
 ```C#
-// fxCalendar = let fnDateTable = ( StartDate as date, EndDate as date, optional FYStartMonthNum as number, optional Holidays as list, optional WDStartNum as number, optional AddRelativeNetWorkdays as logical ) as table =>    
+let 
+fxCalendar = ( StartDate as date, EndDate as date, optional FYStartMonthNum as number, optional Holidays as list, optional WDStartNum as number, optional AddRelativeNetWorkdays as logical ) as table =>    
 let
-                // //Parameters
-                StartDate = #date(2020, 1, 1),
-                EndDate = #date(2024, 12, 31),
-                FYStartMonthNum = 1,
-                Holidays = {},
-                WDStartNum = 1,
-                AddRelativeNetWorkdays = true,
+                // // //Parameters
+                // StartDate = #date(2020, 1, 1),
+                // EndDate = #date(2024, 12, 31),
+                // FYStartMonthNum = 1,
+                // Holidays = {},
+                // WDStartNum = 1,
+                // AddRelativeNetWorkdays = true,
 
                 //Date table code
                 FYStartMonth = List.Select( {1..12}, each _ = FYStartMonthNum ){0}? ?? 1,
@@ -62,7 +63,7 @@ let
                 col_DayNAME = Table.AddColumn(col_DayWeekNUM, "Day of Week Name", each Text.Proper( Date.ToText([Date], "dddd" )), type text),
                 col_DayINITIAL = Table.AddColumn(col_DayNAME, "Day of Week Initial", each Text.Proper(Text.Start([Day of Week Name], 1)) & Text.Repeat( Character.FromNumber(8203), Date.DayOfWeek([Date], Day.Monday) + WDStart ), type text),
                 col_DayYearNUM = Table.AddColumn(col_DayINITIAL, "Day of Year", each Date.DayOfYear([Date]), Int64.Type),
-                col_DayMonthYearINT = Table.AddColumn(col_DayYearNUM, "DateInt", each [YearNUM] * 10000 + [Month] * 100 + [Day of Month], type number),
+                col_DayMonthYearINT = Table.AddColumn(col_DayYearNUM, "DateInt", each [YearNUM] * 10000 + [MonthNUM] * 100 + [Day of Month], type number),
                 col_DayOFFSET = Table.AddColumn(col_DayMonthYearINT, "CurrDayOffset", each Number.From([Date]) - Number.From(var_CurrentDate), type number),
                 col_isAfterToday = Table.AddColumn(col_DayOFFSET, "IsAfterToday", each not ([Date] <= Date.From(var_CurrentDate)), type logical),
                 col_isWeekDay = Table.AddColumn(col_isAfterToday, "IsWeekDay", each if Date.DayOfWeek([Date], Day.Monday) > 4 then false else true, type logical),
@@ -78,15 +79,15 @@ let
 
                 // BufferTable = Table.Buffer(Table.Distinct( col_ISOQuarterYearINT[[ISO Year], [DateInt]])),
                 // InsertISOday = Table.AddColumn(col_ISOQuarterYearINT, "ISO Day of Year", (OT) => Table.RowCount( Table.SelectRows( BufferTable, (IT) => IT[DateInt] <= OT[DateInt] and IT[ISO Year] = OT[ISO Year])),  Int64.Type),
-                col_FY = Table.AddColumn(col_ISOQuarterYearINT, "Fiscal Year", each "FY" & (if [Month] >= FYStartMonth and FYStartMonth >1 then Text.From([YearNUM] +1) else Text.From([YearNUM])), type text),
-                //col_FYs = Table.AddColumn(col_FY, "Fiscal Year short", each "FY" & (if [Month] >= FYStartMonth and FYStartMonth >1 then Text.PadEnd( Text.End( Text.From([YearNUM] +1), 2), 2, "0") else Text.End( Text.From([YearNUM]), 2)), type text),
-                col_FQ = Table.AddColumn(col_FY, "Fiscal Quarter", each "FQ" & Text.From( Number.RoundUp( Date.Month( Date.AddMonths( [Date], - (FYStartMonth -1) )) / 3 )) & " " & (if [Month] >= FYStartMonth and FYStartMonth >1 then Text.From([YearNUM] +1) else Text.From([YearNUM])), type text),
-                col_QtrYrINT = Table.AddColumn(col_FQ, "FQuarternYear", each (if [Month] >= FYStartMonth and FYStartMonth >1 then [YearNUM] +1 else [YearNUM]) * 10 + Number.RoundUp( Date.Month( Date.AddMonths( [Date], - (FYStartMonth -1) )) / 3 ), type number),
-                col_FPNUM = Table.AddColumn(col_QtrYrINT, "Fiscal Period Number", each if [Month] >= FYStartMonth and FYStartMonth >1 then [Month] - (FYStartMonth-1) else if [Month] >= FYStartMonth and FYStartMonth =1 then [Month] else [Month] + (12-FYStartMonth+1), type number),
-                col_FPYrINT = Table.AddColumn(col_FPNUM, "Fiscal Period", each "FP" & Text.PadStart( Text.From([Fiscal Period Number]), 2, "0") & " " & (if [Month] >= FYStartMonth and FYStartMonth >1 then Text.From([YearNUM] +1) else Text.From([YearNUM])), type text),
-                col_FPNUMnYr = Table.AddColumn(col_FPYrINT , "FPeriodnYear", each (if [Month] >= FYStartMonth and FYStartMonth >1 then [YearNUM] +1 else [YearNUM]) * 100 + [Fiscal Period Number], type number),
+                col_FY = Table.AddColumn(col_ISOQuarterYearINT, "Fiscal Year", each "FY" & (if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then Text.From([YearNUM] +1) else Text.From([YearNUM])), type text),
+                //col_FYs = Table.AddColumn(col_FY, "Fiscal Year short", each "FY" & (if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then Text.PadEnd( Text.End( Text.From([YearNUM] +1), 2), 2, "0") else Text.End( Text.From([YearNUM]), 2)), type text),
+                col_FQ = Table.AddColumn(col_FY, "Fiscal Quarter", each "FQ" & Text.From( Number.RoundUp( Date.Month( Date.AddMonths( [Date], - (FYStartMonth -1) )) / 3 )) & " " & (if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then Text.From([YearNUM] +1) else Text.From([YearNUM])), type text),
+                col_QtrYrINT = Table.AddColumn(col_FQ, "FQuarternYear", each (if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then [YearNUM] +1 else [YearNUM]) * 10 + Number.RoundUp( Date.Month( Date.AddMonths( [Date], - (FYStartMonth -1) )) / 3 ), type number),
+                col_FPNUM = Table.AddColumn(col_QtrYrINT, "Fiscal Period Number", each if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then [MonthNUM] - (FYStartMonth-1) else if [MonthNUM] >= FYStartMonth and FYStartMonth =1 then [MonthNUM] else [MonthNUM] + (12-FYStartMonth+1), type number),
+                col_FPYrINT = Table.AddColumn(col_FPNUM, "Fiscal Period", each "FP" & Text.PadStart( Text.From([Fiscal Period Number]), 2, "0") & " " & (if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then Text.From([YearNUM] +1) else Text.From([YearNUM])), type text),
+                col_FPNUMnYr = Table.AddColumn(col_FPYrINT , "FPeriodnYear", each (if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then [YearNUM] +1 else [YearNUM]) * 100 + [Fiscal Period Number], type number),
                 var_FiscalCalendarSTART = #date( Date.Year(StartDate)-1, FYStartMonth, 1 ),
-                col_FiscalFirstDay = Table.AddColumn( col_FPNUMnYr, "FiscalFirstDay", each if [Month] >= FYStartMonth and FYStartMonth >1 then #date( Date.Year([Date])+1, FYStartMonth, 1) else #date( Date.Year([Date]), FYStartMonth, 1), type date ),
+                col_FiscalFirstDay = Table.AddColumn( col_FPNUMnYr, "FiscalFirstDay", each if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then #date( Date.Year([Date])+1, FYStartMonth, 1) else #date( Date.Year([Date]), FYStartMonth, 1), type date ),
 
                 var_Table = Table.FromList( List.Transform( {Number.From(var_FiscalCalendarSTART) .. Number.From(EndDate)}, Date.From), Splitter.SplitByNothing(), type table [DateFW = Date.Type]),
                 col_FFD = Table.AddColumn( var_Table, "FiscalFirstDay", each if Date.Month([DateFW]) < FYStartMonth then #date(Date.Year([DateFW]), FYStartMonth, 1) else #date(Date.Year([DateFW]) + 1, FYStartMonth, 1)),
@@ -106,7 +107,7 @@ let
                 var_CurrISOYear = rec_CurrentDate{0}[ISO Year],
                 var_CurrISOQtr = rec_CurrentDate{0}[ISO QuarterNUM],
                 var_CurrYear = rec_CurrentDate{0}[YearNUM],
-                var_CurrMonth = rec_CurrentDate{0}[Month],
+                var_CurrMonth = rec_CurrentDate{0}[MonthNUM],
                 var_FFD = rec_CurrentDate{0}[FiscalFirstDay],
                 var_PFFD = Date.AddYears(var_FFD, -1),
                 var_CurrFY = rec_CurrentDate{0}[Fiscal Year],
@@ -116,7 +117,7 @@ let
 
                 col_ISOYearOFFSET = Table.AddColumn(col_FWYearINT, "ISO CurrYearOffset", each [ISO Year] - var_CurrISOYear, type number),
                 col_ISOQuarterOFFSET = Table.AddColumn(col_ISOYearOFFSET, "ISO CurrQuarterOffset", each ((4 * [ISO Year]) +  [ISO QuarterNUM]) - ((4 * var_CurrISOYear) + var_CurrISOQtr), type number),
-                col_FiscalYearOFFSET = Table.AddColumn(col_ISOQuarterOFFSET, "Fiscal CurrYearOffset", each try (if [Month] >= FYStartMonth then [YearNUM]+1 else [YearNUM]) - (if var_CurrMonth >= FYStartMonth then var_CurrYear+1 else var_CurrYear) otherwise null, type number),
+                col_FiscalYearOFFSET = Table.AddColumn(col_ISOQuarterOFFSET, "Fiscal CurrYearOffset", each try (if [MonthNUM] >= FYStartMonth then [YearNUM]+1 else [YearNUM]) - (if var_CurrMonth >= FYStartMonth then var_CurrYear+1 else var_CurrYear) otherwise null, type number),
                 col_isCurrFY = Table.AddColumn(col_FiscalYearOFFSET, "IsCurrentFY", each if [Fiscal Year] = var_CurrFY then true else false, type logical),
                 col_isCurrFQ = Table.AddColumn(col_isCurrFY, "IsCurrentFQ", each if [FQuarternYear] = var_CurrFQ then true else false, type logical),
                 col_isCurrFP = Table.AddColumn(col_isCurrFQ, "IsCurrentFP", each if [FPeriodnYear] = var_CurrFP then true else false, type logical),
@@ -142,5 +143,5 @@ let
                 ListCols = if var_FWLogicTest then Table.RemoveColumns(cols_Reorder,{"ISO QuarterNUM", "Fiscal Year", "Fiscal Quarter", "FQuarternYear", "Fiscal Period Number", "Fiscal Period", "FPeriodnYear", "DateFW", "Fiscal Week Number", "Fiscal Week", "FWeeknYear", "Fiscal CurrYearOffset", "IsCurrentFQ", "IsCurrentFP", "IsCurrentFW"}) else Table.RemoveColumns(cols_Reorder,{"Fiscal Period Number", "DateFW", "Fiscal Week Number", "ISO QuarterNUM"})
             in
                 ListCols
-//in fxCalendar
+in fxCalendar
 ```
