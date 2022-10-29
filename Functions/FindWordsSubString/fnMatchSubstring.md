@@ -1,4 +1,5 @@
 ```JSONC
+
 let
   Source = (Column as any, WordList as any, optional InsertList) =>
     // choose column, manually type list of words seperated by comma "word1,word2,word3", if no manual list, use external word list)
