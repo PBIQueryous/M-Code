@@ -1125,7 +1125,8 @@ let
           Documentation.Category = " Calendar Category ", 
           Documentation.Source = "  PBIQUERYOUS  ", 
           Documentation.Version = " 3.0 (3-in-1, Calendar Year, Fiscal Year and Academic Year)", 
-          Documentation.Author = " Imran Haq ", 
+          Documentation.Author = // Original Author: Melissa de Korte @EnterpriseDNA
+                " Imran Haq (PBI Queryous )", 
           Documentation.Examples = 
           {
             [
