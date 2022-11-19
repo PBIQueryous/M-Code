@@ -1,5 +1,6 @@
-```ioke
+# Date Table
 
+```ioke
 let
   customFunction =  // fnReplaceBlanksRemoveNulls                 
 /* ------------------------------ 
@@ -1019,21 +1020,22 @@ let
 
 // ------------------------------------------------------------------     
 /*
-invokeFunction = 
-( StartYearNUM as number, 
-EndYearNUM as number, 
-optional FYStartMonthNum as number, 
-optional AYStartMonthNum as number, 
-optional Holidays as list, 
-optional WDStartNum as number, 
-optional AddRelativeNetWorkdays as logical 
+  invokeFunction = (
+    StartYearNUM as number, 
+    EndYearNUM as number, 
+    optional FYStartMonthNum as number, 
+    optional AYStartMonthNum as number, 
+    optional Holidays as list, 
+    optional WDStartNum as number, 
+    optional AddRelativeNetWorkdays as logical
+  ) as table =>
 */
 
 // 3.0: change parameter metadata here
       fnType = type function (
 
         // 3.0.1: first parameter
-        optional StartYearNUM as (
+        StartYearNUM as (
           type number
             meta 
             [
@@ -1043,8 +1045,8 @@ optional AddRelativeNetWorkdays as logical
             ]
         ),
 
-        // 3.0.1: first parameter
-        optional EndYearNUM as (
+        // 3.0.2: second parameter
+        EndYearNUM as (
           type number
             meta 
             [
@@ -1053,7 +1055,7 @@ optional AddRelativeNetWorkdays as logical
               Documentation.SampleValues = {"Table/Step"}
             ]
         ),
-        // 3.0.1: first parameter
+        // 3.0.3: third parameter
         optional FYStartMonthNum as (
           type number
             meta 
@@ -1064,7 +1066,7 @@ optional AddRelativeNetWorkdays as logical
             ]
         )
        
-        // 3.0.2: second parameter
+        // 3.0.4: fourth parameter
         ,
          optional AYStartMonthNum as (
           type number
@@ -1075,10 +1077,10 @@ optional AddRelativeNetWorkdays as logical
               Documentation.SampleValues    = {"123"}
             ]
         )
-  // 3.0.3: second parameter
+  // 3.0.5: fifth parameter
         ,
          optional Holidays as (
-          type any
+          type list
             meta 
             [
               Documentation.FieldCaption     = " Choose Separator Type ", 
@@ -1086,7 +1088,7 @@ optional AddRelativeNetWorkdays as logical
               Documentation.SampleValues    = {"List"}
             ]
         )
-  // 3.0.4: second parameter AddRelativeNetWorkdays
+  // 3.0.6: sixth parameter Week Start number
         ,
          optional WDStartNum as (
           type number
@@ -1097,7 +1099,7 @@ optional AddRelativeNetWorkdays as logical
               Documentation.SampleValues    = {"123"}
             ]
         )
-  // 3.0.5: second parameter AddRelativeNetWorkdays
+  // 3.0.7: seventh parameter AddRelativeNetWorkdays
         ,
          optional AddRelativeNetWorkdays as (
           type logical
@@ -1157,7 +1159,7 @@ optional AddRelativeNetWorkdays as logical
     in
 // ------------------------------------------------------------------
 // select one of the above steps and paste below
-      functionDocumentation      /* <-- Choose final documentation type */
+      parameterDocumentation      /* <-- Choose final documentation type */
       
 in
   customFunction
