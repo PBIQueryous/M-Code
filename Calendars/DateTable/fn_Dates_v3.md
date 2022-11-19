@@ -2,22 +2,24 @@
 
 ```ioke
 let
-  customFunction =  // fnReplaceBlanksRemoveNulls                 
+  customFunction =  // fn_Dates                 
 /* ------------------------------ 
   Author: Imran Haq - PBI QUERYOUS
-  Description: fnReplaceBlanksRemoveNulls
+  Description: fn_Dates
+  Special Thanks: Melissa de Korte (Enterprise DNA)
+  Link: https://analysthub.enterprisedna.co/apps/m-code?id=tbzgom0a
  ---------------------------------*/
 
 // 1.0: invoke function & define parameter inputs
 let
   invokeFunction = (
-    StartYearNUM as number, 
-    EndYearNUM as number, 
-    optional FYStartMonthNum as number, 
-    optional AYStartMonthNum as number, 
-    optional Holidays as list, 
-    optional WDStartNum as number, 
-    optional AddRelativeNetWorkdays as logical
+    StartYearNUM as number,                               // start year
+    EndYearNUM as number,                                 // end year
+    optional FYStartMonthNum as nullable number,          // Fiscal Year Start
+    optional AYStartMonthNum as nullable number,          // Academic Year Start
+    optional Holidays as list,                            // Holidays list
+    optional WDStartNum as number,                        // WeekDay Start
+    optional AddRelativeNetWorkdays as logical            // Network Days
   ) as table =>
         
 // ------------------------------------------------------------------
@@ -1034,79 +1036,79 @@ let
 // 3.0: change parameter metadata here
       fnType = type function (
 
-        // 3.0.1: first parameter
+        // 3.0.1: Calendar Start Year parameter
         StartYearNUM as (
           type number
             meta 
             [
-              Documentation.FieldCaption     = " Select Query: #(lf) Or input previous step ", 
-              Documentation.FieldDescription = " Select Query/Step: #(cr,lf) Or input previous step ",
-              Documentation.SampleValues = {"Table/Step"}
+              Documentation.FieldCaption     = " Start Year: #(lf) 4-digit integer ", 
+              Documentation.FieldDescription = " 4-digit integer: #(cr,lf) YYYY ",
+              Documentation.SampleValues = {2021}
             ]
         ),
 
-        // 3.0.2: second parameter
+        // 3.0.2: Calendar End Year parameter
         EndYearNUM as (
           type number
             meta 
             [
-              Documentation.FieldCaption     = " Select Query: #(lf) Or input previous step ", 
-              Documentation.FieldDescription = " Select Query/Step: #(cr,lf) Or input previous step ",
-              Documentation.SampleValues = {"Table/Step"}
+              Documentation.FieldCaption     = " Start Year: #(lf) 4-digit integer ", 
+              Documentation.FieldDescription = " 4-digit integer: #(cr,lf) YYYY ",
+              Documentation.SampleValues = {2023}
             ]
         ),
-        // 3.0.3: third parameter
+        // 3.0.3: Fiscal Start Month parameter
         optional FYStartMonthNum as (
           type number
             meta 
             [
-              Documentation.FieldCaption     = " Select Query: #(lf) Or input previous step ", 
-              Documentation.FieldDescription = " Select Query/Step: #(cr,lf) Or input previous step ",
-              Documentation.SampleValues = {"Table/Step"}
+              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ", 
+              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ",
+              Documentation.SampleValues = {08}
             ]
         )
        
-        // 3.0.4: fourth parameter
+        // 3.0.4: Academic Start Month parameter
         ,
          optional AYStartMonthNum as (
           type number
             meta 
             [
-              Documentation.FieldCaption     = " Choose Separator Type ", 
-              Documentation.FieldDescription = " Recommended to use #(lf) forward slash / ", 
-              Documentation.SampleValues    = {"123"}
+              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ", 
+              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ", 
+              Documentation.SampleValues    = {123}
             ]
         )
-  // 3.0.5: fifth parameter
+  // 3.0.5: Holidays list parameter
         ,
          optional Holidays as (
           type list
             meta 
             [
-              Documentation.FieldCaption     = " Choose Separator Type ", 
-              Documentation.FieldDescription = " Recommended to use #(lf) forward slash / ", 
+              Documentation.FieldCaption     = " Choose holidays as a list ", 
+              Documentation.FieldDescription = " Choose holidays as a list ", 
               Documentation.SampleValues    = {"List"}
             ]
         )
-  // 3.0.6: sixth parameter Week Start number
+  // 3.0.6: Weekday Start parameter 
         ,
          optional WDStartNum as (
           type number
             meta 
             [
-              Documentation.FieldCaption     = " Choose Separator Type ", 
-              Documentation.FieldDescription = " Recommended to use #(lf) forward slash / ", 
+              Documentation.FieldCaption     = " Input weekday start number  ", 
+              Documentation.FieldDescription = " Input weekday start number ", 
               Documentation.SampleValues    = {"123"}
             ]
         )
-  // 3.0.7: seventh parameter AddRelativeNetWorkdays
+  // 3.0.7: AddRelativeNetWorkdays parameter 
         ,
          optional AddRelativeNetWorkdays as (
           type logical
             meta 
             [
-              Documentation.FieldCaption     = " Choose Separator Type ", 
-              Documentation.FieldDescription = " Recommended to use #(lf) forward slash / ", 
+              Documentation.FieldCaption     = " Input relative network days as boolean ", 
+              Documentation.FieldDescription = " Input relative network days as boolean ", 
               Documentation.SampleValues    = {"True/False"}
             ]
         )
@@ -1116,23 +1118,24 @@ let
 // 4.0: edit function metadata here
       documentation = 
       [  
-
+// Inspired by Enterprise DNA - Melissa de Korte (https://www.youtube.com/watch?v=H8F60sgQZOI)
           Documentation.Name = " fnDates ", 
           Documentation.Description = " Dates Table with Fiscal and Academic Year ", 
           Documentation.LongDescription = " Dates Table with Fiscal and Academic Year ", 
           Documentation.Category = " Calendar Category ", 
           Documentation.Source = "  PBIQUERYOUS  ", 
-          Documentation.Version = " 1.0 ", 
+          Documentation.Version = " 3.0 (3-in-1, Calendar Year, Fiscal Year and Academic Year)", 
           Documentation.Author = " Imran Haq ", 
           Documentation.Examples = 
           {
             [
             Description = "  Dates Table with Fiscal and Academic Year   ",
-            Code    = " fn_Dates_v3( 2021, 2023, 4,8, null, null ) ", 
+            Code    = " fn_Dates( 2021, 2023, 4,8, null, null ) ", 
             Result  = 
 "
  1. Input paramaters
  2. Invoke function
+ 3. Optional: replace start / end year parameters with dynamic values to automatically extend table
  
 "
 
