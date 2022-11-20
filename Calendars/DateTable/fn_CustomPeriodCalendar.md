@@ -2,14 +2,29 @@
 ## for calendars with more than standard 12-month period
 
 ``` ioke
+
 let
-  fnCustomCalendar = (
-    minYear as number, 
+  customFunction =  // fn_CustomPeriodCalendar                 
+/* ------------------------------ 
+  Author: Imran Haq - PBI QUERYOUS
+  Description: fn_CustomPeriodCalendar
+  Special Thanks: SQLBI (Alberto Ferrari and Marco Russo)
+  Link: https://www.sqlbi.com/
+ ---------------------------------*/
+
+// 1.0: invoke function & define parameter inputs
+let
+  invokeFunction = (
+    minYear as number,
     maxYear as number, 
     MonthsInYear as number, 
     optional AYMonthNUM as number
   ) as table =>
-    let
+        
+// ------------------------------------------------------------------
+// 2.0: function transformations
+   
+let
       // // //Parameters
       // StartDate = #date(2023, 1, 1),
       // EndDate = #date(2024, 12, 31),
@@ -20,7 +35,7 @@ let
       //Date table code
       AYMonthStart = List.Select({1 .. 12}, each _ = AYMonthNUM){0}? ?? 1, 
       StartDate = Date.From("01/" & Text.From(AYMonthStart) & "/" & Text.From(minYear)), 
-      EndDate = Date.From("31/" & Text.From(AYMonthStart - 1) & "/" & Text.From(maxYear)), 
+      EndDate = Date.EndOfMonth(Date.From("1/" & Text.From(AYMonthStart + (MonthsInYear - 12)-1) & "/" & Text.From(maxYear))), 
       StartYear = minYear, 
       StartMonth = Date.Month(StartDate), 
       EndYear = maxYear, 
@@ -244,11 +259,122 @@ let
           in
             result, 
         type text
-      )
-    in
-      col_AcademicQuarter
+      ),list_Columns = {"OG_MonthYear_ID", "Academic Period", "Actual_Date", "Relative_Date", "ActualMonth_End", "RelativeMonth_End", "AcademicYear_NUM", "ActualYear_NUM", "AcademicMonth_NUM", "ActualMonth_NUM", "ActualMonth_Name", "RelativeMonth_NUM", "RelativeMonth_Name", "Month Period", "Return", "Quarter", "Academic Quarter"},
+    cols_Reorder = Table.ReorderColumns(col_AcademicQuarter, list_Columns)
 in
-  fnCustomCalendar
+    cols_Reorder
+    , 
+
+// ------------------------------------------------------------------     
+/*
+    minYear as number,
+    maxYear as number, 
+    MonthsInYear as number, 
+    optional AYMonthNUM as number
+*/
+
+// 3.0: change parameter metadata here
+      fnType = type function (
+
+        // 3.0.1: Calendar Start Year parameter
+        minYear as (
+          type number
+            meta 
+            [
+              Documentation.FieldCaption     = " Start Year: #(lf) 4-digit integer ", 
+              Documentation.FieldDescription = " 4-digit integer: #(cr,lf) YYYY ",
+              Documentation.SampleValues = {2021}
+            ]
+        ),
+
+        // 3.0.2: Calendar End Year parameter
+        maxYear as (
+          type number
+            meta 
+            [
+              Documentation.FieldCaption     = " Start Year: #(lf) 4-digit integer ", 
+              Documentation.FieldDescription = " 4-digit integer: #(cr,lf) YYYY ",
+              Documentation.SampleValues = {2023}
+            ]
+        ),
+        // 3.0.3: Fiscal Start Month parameter
+        MonthsInYear as (
+          type number
+            meta 
+            [
+              Documentation.FieldCaption     = " Total Months in Period: #(lf) (eg: 14) ", 
+              Documentation.FieldDescription = " Total Months in Custom Period: #(lf) (eg: 14) ",
+              Documentation.SampleValues = {14}
+            ]
+        )
+       
+        // 3.0.4: Academic Start Month parameter
+        ,
+         optional AYMonthNUM as (
+          type number
+            meta 
+            [
+              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ", 
+              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ", 
+              Documentation.SampleValues    = {123}
+            ]
+        )
+
+
+   // 3.1: parameter return type   
+    ) as list,
+// ------------------------------------------------------------------
+// 4.0: edit function metadata here
+      documentation = 
+      [  
+// Inspired by SQLBI - Alberto Ferrari and Marco Russo (https://www.daxpatterns.com/custom-time-related-calculations/)
+          Documentation.Name = " fnCustomPeriodCalendar ", 
+          Documentation.Description = " Custom Calendar for non-standard Periods ", 
+          Documentation.LongDescription = " Custom Calendar for non-standard Periods ", 
+          Documentation.Category = " Calendar Category ", 
+          Documentation.Source = "  PBIQUERYOUS  ", 
+          Documentation.Version = " 1.0 (Custom Calendar for non-standard Periods (> 12 months))", 
+          Documentation.Author = " Imran Haq ", 
+          Documentation.Examples = 
+          {
+            [
+            Description = "  Custom Calendar for non-standard Periods   ",
+            Code    = " fn_CustomPeriodCalendar(2021, 2024, 14, 8) ", 
+            Result  = 
+"
+ 1. Input paramaters
+ 2. Invoke function
+ 3. Optional: replace start / end year parameters with dynamic values to automatically extend table
+ 
+"
+
+            ]
+            /* ,
+            [
+            Description = "  description   ",
+            Code    = " code ", 
+            Result  = " result #(cr,lf) new line
+                      #(cr,lf) new line #(cr,lf) 2 "
+            ] */
+          }
+       
+      ]
+       ,
+       
+// ------------------------------------------------------------------
+// 5.0: Choose between Parameter Documentation or Function Documentation
+      functionDocumentation =      // -- function metadata
+      Value.ReplaceType(invokeFunction, Value.ReplaceMetadata( Value.Type(invokeFunction), documentation)),
+      
+      parameterDocumentation =    // -- parameter metadata
+      Value.ReplaceType(functionDocumentation, fnType)
+    in
+// ------------------------------------------------------------------
+// select one of the above steps and paste below
+      parameterDocumentation      /* <-- Choose final documentation type */
+      
+in
+  customFunction
 
 
 ```
