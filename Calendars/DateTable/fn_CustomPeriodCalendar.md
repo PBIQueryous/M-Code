@@ -150,7 +150,7 @@ let
   col_GetActualMonth = Table.AddColumn(
     col_AcademicMonth,
     "ActualMonth_NUM",
-    each fn_GetMonth([AcademicMonth_NUM], 8),
+    each fn_GetMonth([AcademicMonth_NUM], AYMonthStart),
     Int64.Type
   ),
   col_AcYearNUM = Table.AddColumn(
@@ -359,6 +359,15 @@ let
       ),
     type text
   ),
+  col_PeriodReturn = Table.AddColumn(col_AcQtrYear, "Period Return", each [Academic Period] & ": " & [Return] & " - " & Date.ToText( [Actual_Date] , [Format = "MMM-yy"] ), type text),
+    col_ReturnDate = Table.AddColumn(col_PeriodReturn, "Return Date", each [Return] & " - " & Date.ToText( [Actual_Date] , [Format = "MMM-yy"] ), type text),
+    col_isMonthComplete = Table.AddColumn(col_ReturnDate, "isMonthComplete", each Date.EndOfMonth([Actual_Date]) < Date.From(Date.EndOfMonth(var_CurrentDate)) , type logical),
+    col_maxDate = Table.AddColumn(col_isMonthComplete, "maxDate", each let
+cond1 = [isMonthComplete],
+cond2 = if cond1 and [AcademicYearOFFSET] = 0 then [ActualMonth_End] else null,
+result = cond2
+in
+result, type date ),
   list_AllHeaders = Table.ColumnNames(col_AcQtrYear),
   list_Columns = {
     "OG_MonthYear_ID",
@@ -385,7 +394,7 @@ let
     "Academic Quarter & Year",
     "AcademicYearOFFSET"
   },
-  cols_Reorder = Table.ReorderColumns(col_AcQtrYear, list_Columns)
+  cols_Reorder = Table.ReorderColumns(col_maxDate, list_Columns)
 in
   cols_Reorder
 , 
