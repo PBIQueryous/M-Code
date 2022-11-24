@@ -402,7 +402,7 @@ in
         minYear as (
           type number
             meta [
-              Documentation.FieldCaption     = " Start Year: #(lf) 4-digit integer ", 
+              Documentation.FieldCaption     = " Start Year: #(lf) (4-digit integer) ", 
               Documentation.FieldDescription = " 4-digit integer: #(cr,lf) YYYY ", 
               Documentation.SampleValues     = {2021}
             ]
@@ -411,7 +411,7 @@ in
         maxYear as (
           type number
             meta [
-              Documentation.FieldCaption     = " Start Year: #(lf) 4-digit integer ", 
+              Documentation.FieldCaption     = " End Year: #(lf) (4-digit integer) ", 
               Documentation.FieldDescription = " 4-digit integer: #(cr,lf) YYYY ", 
               Documentation.SampleValues     = {2023}
             ]
@@ -429,8 +429,8 @@ in
         optional AYMonthNUM as (
           type number
             meta [
-              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ", 
-              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Aug = 8, May = 5 ", 
+              Documentation.FieldCaption     = " Academic Month Start: #(lf) (eg: Aug = 8) ", 
+              Documentation.FieldDescription = " Academic Month Start: #(lf) (eg: Aug = 8, etc) ", 
               Documentation.SampleValues     = {123}
             ]
         )
