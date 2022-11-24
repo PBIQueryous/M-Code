@@ -1,7 +1,7 @@
 # fnFiscalQuarterOFFSET
 
 ``` ioke
-let
+= let
   fxAddFiscalQuarterOffset = (Date as date, FiscalYearStartMonth as number) as number =>
     let
       CurrentDate = Date.From(DateTime.LocalNow()), 
