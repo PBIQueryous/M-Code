@@ -76,9 +76,13 @@ let
           "15 min", 
           "30 min"
         }
+      ), 
+      HrMin_Label = Table.TransformColumnTypes(
+        Table.DuplicateColumn(cols_Reorder, "Second", "HourMinute"), 
+        {{"HourMinute", type text}}
       )
     in
-      cols_Reorder
+      HrMin_Label
 in
   fn
 
