@@ -5,7 +5,7 @@
 
 
 let
-  customFunction =  // fn_Dates                                             
+  customFunction =  // fn_Dates     AYStartDate                                        
   /* ------------------------------ 
   Author: Imran Haq - PBI QUERYOUS
   Description: fn_Dates
@@ -580,7 +580,7 @@ let
           ), 
           col_AcademicFirstDay = Table.AddColumn(
             col_FiscalFirstDay, 
-            "AcademicFirstDate", 
+            "AYStartDate", 
             each 
               if [MonthNUM] >= AYStartMonth and AYStartMonth > 1 then
                 #date(Date.Year([Date]) + 0, AYStartMonth, 1)
@@ -588,6 +588,17 @@ let
                 #date(Date.Year([Date]) - 1, AYStartMonth, 1), 
             type date
           ), 
+          col_AcademicLastDay = Table.AddColumn(
+            col_AcademicFirstDay, 
+            "AYEndDate", 
+            each 
+              if [MonthNUM] >= AYStartMonth and AYStartMonth > 1 then
+                Date.AddDays(#date(Date.Year([Date]) + 1, AYStartMonth, 1),-1)
+              else
+                Date.AddDays(#date(Date.Year([Date]) - 0, AYStartMonth, 1),-1), 
+            type date
+          ), 
+          //----- begin sub-ETL stages and return later
           var_Table = Table.FromList(
             List.Transform(
               {Number.From(var_AcademicCalendarSTART) .. Number.From(EndDate)}, 
@@ -647,8 +658,9 @@ let
             [DateFW], 
             [Fiscal Week Number]
           ], 
+          //------ return here to begin ETL steps again
           join_Date_DateFW = Table.Join(
-            col_AcademicFirstDay, 
+            col_AcademicLastDay, 
             {"Date"}, 
             cols_Expand2, 
             {"DateFW"}, 
@@ -714,7 +726,7 @@ let
           var_CurrYear = rec_CurrentDate{0}[YearNUM], 
           var_CurrMonth = rec_CurrentDate{0}[MonthNUM], 
           var_FFD = rec_CurrentDate{0}[FiscalFirstDate], 
-          var_AFD = rec_CurrentDate{0}[AcademicFirstDate], 
+          var_AFD = rec_CurrentDate{0}[AYStartDate], 
           var_PFFD = Date.AddYears(var_FFD, - 1), 
           var_PAFD = Date.AddYears(var_AFD, - 1), 
           var_CurrFY = rec_CurrentDate{0}[Fiscal Year], 
@@ -1058,7 +1070,8 @@ let
             "IsCurrentAP", 
             "IsPAYTD", 
             "IsCurrentAY", 
-            "AcademicFirstDate"
+            "AYStartDate",
+            "AYEndDate"
 
           }, 
           FYCols = {
