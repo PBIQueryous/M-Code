@@ -1,7 +1,7 @@
 # Function Template
 ### function template with steps to edit parameter and function metadata
 
-```c#
+```ioke
 let
   customFunction =  // fnReplaceBlanksRemoveNulls                 
 /* ------------------------------ 
