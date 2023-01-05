@@ -25,17 +25,20 @@ let
       ) as table =>
         // ------------------------------------------------------------------
         // 2.0: function transformations
-        let
-          // // // //Parameters
+let
+          // // //Parameters
+
           // StartDate = #date(2020, 1, 1), // - turn off in custom function
           // EndDate = #date(2024, 12, 31), // -turn off in custom function
-          // FYStartMonthNum = null,
-          // AYStartMonthNum  = null,
+          // FYStartMonthNum = 4,
+          // AYStartMonthNum  = 8,
           // Holidays = {},
           // WDStartNum = 1,
           // AddRelativeNetWorkdays = true,
-          //Date table code
-          StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn on in custom fn                                                                              
+
+        // // Date table code
+
+          StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn on in custom fn
           EndDate = Date.From("31/12/" & Text.From(EndYearNUM)),  // -- turn on in custom fn                                                                              
           FYStartMonth = List.Select({1 .. 12}, each _ = FYStartMonthNum){0}? ?? 1, 
           AYStartMonth = List.Select({1 .. 12}, each _ = AYStartMonthNum){0}? ?? 1, 
@@ -413,9 +416,22 @@ let
               in
                 "FY" & result1, 
             type text
+          ),
+          col_FY1 = Table.AddColumn(
+            col_FY, 
+            "Fiscal_Year", 
+            each 
+              let
+                
+                yearNum1 = Number.From(Text.End([Fiscal Year], 2)), 
+                 
+                result1  = Text.From(yearNum1) & "/" & Text.From(yearNum1+1)
+              in
+                result1, 
+            type text
           ), 
           col_AY = Table.AddColumn(
-            col_FY, 
+            col_FY1, 
             "Academic Year", 
             each 
               let
@@ -426,10 +442,23 @@ let
               in
                 "AY" & result1, 
             type text
-          ), 
+          ),
+          col_AY1 = Table.AddColumn(
+            col_AY, 
+            "Academic_Year", 
+            each 
+              let
+                
+                yearNum1 = Number.From(Text.End([Academic Year], 2)), 
+                 
+                result1  = Text.From(yearNum1) & "/" & Text.From(yearNum1+1)
+              in
+                result1, 
+            type text
+          ),  
           //col_FYs = Table.AddColumn(col_FY, "Fiscal Year short", each "FY" & (if [MonthNUM] >= FYStartMonth and FYStartMonth >1 then Text.PadEnd( Text.End( Text.From([YearNUM] +1), 2), 2, "0") else Text.End( Text.From([YearNUM]), 2)), type text),
           col_FQ = Table.AddColumn(
-            col_AY, 
+            col_AY1, 
             "Fiscal Quarter", 
             each "FQ"
               & Text.From(
@@ -988,7 +1017,9 @@ let
             cols_Format, 
             {
               "Academic Year",
+              "Academic_Year",
               "Fiscal Year", 
+              "Fiscal_Year", 
               "Date", 
               "YearNUM", 
               "CurrYearOffset", 
@@ -1058,7 +1089,8 @@ let
             }
           ), 
           AYCols = {
-            "Academic Year", 
+            "Academic Year",
+            "Academic_Year",
             "Academic Quarter", 
             "AcademicQuarterYearINT", 
             "AcademicPeriodNUM", 
@@ -1076,7 +1108,8 @@ let
           }, 
           FYCols = {
             "ISO QuarterNUM", 
-            "Fiscal Year", 
+            "Fiscal Year",
+            "Fiscal_Year", 
             "Fiscal Quarter", 
             "FiscalQuarterYearINT", 
             "FiscalPeriodNUM", 
@@ -1108,7 +1141,8 @@ let
                 {"DateFW", "FiscalWeekYearINT", "ISO QuarterNUM" /* "FiscalPeriodNUM",  */                         }
               )
         in
-          ListCols, 
+          ListCols
+        , 
       // ------------------------------------------------------------------     
       /*
   invokeFunction = (
