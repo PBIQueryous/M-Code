@@ -4,6 +4,8 @@
 ```ioke
 
 
+
+
 let
   customFunction =  // fn_Dates     AYStartDate                                        
   /* ------------------------------ 
@@ -875,7 +877,7 @@ let
           ), 
           col_isPrevYTD = Table.AddColumn(
             col_isCurrFW, 
-            "IsPYTD", 
+            "IsPreviousYear", 
             each 
               if var_CurrYear - 1 = [YearNUM] and [DayYearNUM] <= rec_CurrentDate{0}[DayYearNUM] then
                 true
@@ -939,7 +941,7 @@ let
           ), 
           col_isPrevFYTD = Table.AddColumn(
             col_isPrevYTD, 
-            "IsPFYTD", 
+            "IsPreviousFY", 
             each 
               if [FiscalYearOFFSET] = - 1 and List.Contains(list_PrevFiscalYearDates, [Date]) then
                 true
@@ -949,7 +951,7 @@ let
           ), 
           col_isPrevAYTD = Table.AddColumn(
             col_isPrevFYTD, 
-            "IsPAYTD", 
+            "IsPreviousAY", 
             each if [AcademicYearOFFSET] = - 1 then true else false, 
             type logical
           ), 
@@ -1084,8 +1086,8 @@ let
               "IsCurrentFQ", 
               "IsCurrentFP", 
               "IsCurrentFW", 
-              "IsPYTD", 
-              "IsPFYTD"
+              "IsPreviousYear", 
+              "IsPreviousFY"
             }
           ), 
           AYCols = {
@@ -1100,7 +1102,7 @@ let
             "AcademicQuarterOFFSET",
             "IsCurrentAQ", 
             "IsCurrentAP", 
-            "IsPAYTD", 
+            "IsPreviousAY", 
             "IsCurrentAY", 
             "AYStartDate",
             "AYEndDate"
@@ -1124,7 +1126,7 @@ let
             "IsCurrentFQ", 
             "IsCurrentFP", 
             "IsCurrentFW", 
-            "IsPFYTD", 
+            "IsPreviousFY", 
             "IsCurrentFY"
           }, 
           AllCols = List.Union({FYCols, AYCols}), 
@@ -1269,6 +1271,8 @@ let
       parameterDocumentation /* <-- Choose final documentation type */                                         
 in
   customFunction
+  
+  
   
   
 ```
