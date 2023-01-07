@@ -30,18 +30,19 @@ let
 let
           // // //Parameters
 
-          // StartDate = #date(2020, 1, 1), // - turn off in custom function
-          // EndDate = #date(2024, 12, 31), // -turn off in custom function
+          //StartDate = #date(2020, 1, 1), // - turn ON for DEBUG
+          // EndDate = #date(2024, 12, 31), // -turn ON for DEBUG
           // FYStartMonthNum = 4,
           // AYStartMonthNum  = 8,
           // Holidays = {},
           // WDStartNum = 1,
           // AddRelativeNetWorkdays = true,
 
-        // // Date table code
+        // //-- Date table code
 
-          StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn on in custom fn
-          EndDate = Date.From("31/12/" & Text.From(EndYearNUM)),  // -- turn on in custom fn                                                                              
+          StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn ON for CUSTOM FN
+          EndDate = Date.From("31/12/" & Text.From(EndYearNUM)),  // -- turn ON for CUSTOM FN 
+                                                                             
           FYStartMonth = List.Select({1 .. 12}, each _ = FYStartMonthNum){0}? ?? 1, 
           AYStartMonth = List.Select({1 .. 12}, each _ = AYStartMonthNum){0}? ?? 1, 
           WDStart = List.Select({0 .. 1}, each _ = WDStartNum){0}? ?? 0, 
@@ -877,7 +878,7 @@ let
           ), 
           col_isPrevYTD = Table.AddColumn(
             col_isCurrFW, 
-            "IsPreviousYear", 
+            "IsPreviousYTD", 
             each 
               if var_CurrYear - 1 = [YearNUM] and [DayYearNUM] <= rec_CurrentDate{0}[DayYearNUM] then
                 true
@@ -939,7 +940,7 @@ let
               each [DateFY] <= var_CurrentDate
             )[PrevDateFY]
           ), 
-          col_isPrevFYTD = Table.AddColumn(
+          col_isPrevFY = Table.AddColumn(
             col_isPrevYTD, 
             "IsPreviousFY", 
             each 
@@ -949,8 +950,8 @@ let
                 false, 
             type logical
           ), 
-          col_isPrevAYTD = Table.AddColumn(
-            col_isPrevFYTD, 
+          col_isPrevAY = Table.AddColumn(
+            col_isPrevFY, 
             "IsPreviousAY", 
             each if [AcademicYearOFFSET] = - 1 then true else false, 
             type logical
@@ -958,13 +959,13 @@ let
           col_NetWorkDays = 
             if AddRelativeNetWorkdays = true then
               Table.AddColumn(
-                col_isPrevAYTD, 
+                col_isPrevAY, 
                 "Relative Networkdays", 
                 each fxNETWORKDAYS(StartDate, [Date], Holidays), 
                 type number
               )
             else
-              col_isPrevAYTD, 
+              col_isPrevAY, 
           fxNETWORKDAYS = (StartDate, EndDate, optional Holidays as list) =>
             let
               list_Dates = List.Dates(
@@ -1086,7 +1087,7 @@ let
               "IsCurrentFQ", 
               "IsCurrentFP", 
               "IsCurrentFW", 
-              "IsPreviousYear", 
+              "IsPreviousYTD", 
               "IsPreviousFY"
             }
           ), 
@@ -1271,6 +1272,7 @@ let
       parameterDocumentation /* <-- Choose final documentation type */                                         
 in
   customFunction
+  
   
   
   
