@@ -13,3 +13,20 @@ splitText = Table.AddColumn(
                         )
 
 ```
+
+
+## Using Transform Columns instead of Add Column
+
+
+```ioke
+
+= Table.TransformColumns(
+                      col_ProgrammeDataSource,
+                            {{"Aptem Program Status", each Text.Combine( 
+                            Splitter.SplitTextByCharacterTransition({"a".."z"},{"A".."Z"})
+                            (Text.Replace(_, "_", ""))
+                            , " "
+                            ), 
+                            type text}})
+                            
+```
