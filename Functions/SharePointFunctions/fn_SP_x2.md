@@ -1,5 +1,18 @@
 # basic API request
 
+```ioke
+//This is the basic API request that returns a XML document
+let
+    baseURL = "https://<sharepoint site>",
+    listName = "<list name>",
+    Source = Web.Contents(
+        baseURL & "/_api/web/lists/getbytitle('" & listName & "')/items"
+    )
+in
+    Source
+
+```
+
 ``` ioke
 //This is the basic API request that returns a JSON Document
 let
