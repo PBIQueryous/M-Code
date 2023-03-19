@@ -4,8 +4,6 @@
 ```ioke
 
 
-
-
 let
   customFunction =  // fn_Dates     AYStartDate                                        
   /* ------------------------------ 
@@ -30,15 +28,15 @@ let
 let
           // // //Parameters
 
-          //StartDate = #date(2020, 1, 1), // - turn ON for DEBUG
-          // EndDate = #date(2024, 12, 31), // -turn ON for DEBUG
+          // StartDate = #date(2020, 1, 1), // - turn off in custom function
+          // EndDate = #date(2024, 12, 31), // -turn off in custom function
           // FYStartMonthNum = 4,
           // AYStartMonthNum  = 8,
           // Holidays = {},
           // WDStartNum = 1,
           // AddRelativeNetWorkdays = true,
 
-        // //-- Date table code
+// //-- Date table code
 
           StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn ON for CUSTOM FN
           EndDate = Date.From("31/12/" & Text.From(EndYearNUM)),  // -- turn ON for CUSTOM FN 
@@ -204,8 +202,10 @@ let
             each if [Month Name] = var_CurrentMonthName then "Current" else [Month Short], 
             type text
           ), 
+          col_FiscalMonth = Table.DuplicateColumn(col_MonthSelection, "Month Short", "Fiscal Month", type text),
+          col_AcademicMonth = Table.DuplicateColumn(col_FiscalMonth, "Month Short", "Academic Month", type text),
           col_DayMonthNUM = Table.AddColumn(
-            col_MonthSelection, 
+            col_AcademicMonth, 
             "DayMonthNUM", 
             each Date.Day([Date]), 
             type number
@@ -329,8 +329,20 @@ let
             each Number.From([Date]) - Number.From(var_CurrentDate), 
             type number
           ), 
-          col_isAfterToday = Table.AddColumn(
+          col_isYTD = Table.AddColumn(
             col_DayOFFSET, 
+            "IsYTD", 
+            each ([Date] <= Date.From(var_CurrentDate)), 
+            type logical
+          ), 
+          col_isFuture = Table.AddColumn(
+            col_isYTD, 
+            "IsFuture", 
+            each not ([Date] <= Date.From(var_CurrentDate)), 
+            type logical
+          ), 
+          col_isAfterToday = Table.AddColumn(
+            col_isFuture, 
             "IsAfterToday", 
             each not ([Date] <= Date.From(var_CurrentDate)), 
             type logical
@@ -610,7 +622,7 @@ let
                 #date(Date.Year([Date]) - 1, FYStartMonth, 1), 
             type date
           ), 
-          col_AcademicFirstDay = Table.AddColumn(
+          col_AYStartDate = Table.AddColumn(
             col_FiscalFirstDay, 
             "AYStartDate", 
             each 
@@ -620,8 +632,8 @@ let
                 #date(Date.Year([Date]) - 1, AYStartMonth, 1), 
             type date
           ), 
-          col_AcademicLastDay = Table.AddColumn(
-            col_AcademicFirstDay, 
+          col_AYEndDate = Table.AddColumn(
+            col_AYStartDate, 
             "AYEndDate", 
             each 
               if [MonthNUM] >= AYStartMonth and AYStartMonth > 1 then
@@ -630,7 +642,28 @@ let
                 Date.AddDays(#date(Date.Year([Date]) - 0, AYStartMonth, 1),-1), 
             type date
           ), 
-          //----- begin sub-ETL stages and return later
+          col_FYStartDate = Table.AddColumn(
+            col_AYEndDate, 
+            "FYStartDate", 
+            each 
+              if [MonthNUM] >= FYStartMonth and FYStartMonth > 1 then
+                #date(Date.Year([Date]) + 0, FYStartMonth, 1)
+              else
+                #date(Date.Year([Date]) - 1, FYStartMonth, 1), 
+            type date
+          ), 
+          col_FYEndDate = Table.AddColumn(
+            col_FYStartDate, 
+            "FYEndDate", 
+            each 
+              if [MonthNUM] >= FYStartMonth and FYStartMonth > 1 then
+                Date.AddDays(#date(Date.Year([Date]) + 1, FYStartMonth, 1),-1)
+              else
+                Date.AddDays(#date(Date.Year([Date]) - 0, FYStartMonth, 1),-1), 
+            type date
+          ),
+          //------------------------------------------\\ 
+          //----- begin sub-ETL stages and return later ----\\
           var_Table = Table.FromList(
             List.Transform(
               {Number.From(var_AcademicCalendarSTART) .. Number.From(EndDate)}, 
@@ -692,7 +725,7 @@ let
           ], 
           //------ return here to begin ETL steps again
           join_Date_DateFW = Table.Join(
-            col_AcademicLastDay, 
+            col_FYEndDate, 
             {"Date"}, 
             cols_Expand2, 
             {"DateFW"}, 
@@ -1013,7 +1046,9 @@ let
               {"QuarterOFFSET", Int64.Type}, 
               {"YearOFFSET", Int64.Type}, 
               {"FiscalYearOFFSET", Int64.Type}, 
-              {"FiscalWeekYearINT", Int64.Type}
+              {"FiscalWeekYearINT", Int64.Type},
+              {"Fiscal Week Number", Int64.Type},
+              {"DateFW", type date}
             }
           ), 
           cols_Reorder = Table.ReorderColumns(
@@ -1024,6 +1059,8 @@ let
               "Fiscal Year", 
               "Fiscal_Year", 
               "Date", 
+              "IsYTD",
+              "IsFuture",
               "YearNUM", 
               "YearOFFSET", 
               "isYearComplete", 
@@ -1035,7 +1072,11 @@ let
               "QuarterYearINT", 
               "QuarterOFFSET", 
               "isQuarterComplete", 
-              "MonthNUM", 
+              "MonthNUM",
+              "FiscalPeriodNUM",
+              "Fiscal Month",
+              "AcademicPeriodNUM", 
+              "Academic Month",
               "Start of Month", 
               "End of Month", 
               "Month & Year", 
@@ -1074,7 +1115,7 @@ let
               "FiscalQuarterOFFSET", 
               "Fiscal Quarter", 
               "FiscalQuarterYearINT", 
-              "FiscalPeriodNUM", 
+              
               "Fiscal Period", 
               "FiscalPeriodYearINT", 
               "DateFW", 
@@ -1095,7 +1136,8 @@ let
             "Academic Year",
             "Academic_Year",
             "Academic Quarter", 
-            "AcademicQuarterYearINT", 
+            "AcademicQuarterYearINT",
+            "Academic Month", 
             "AcademicPeriodNUM", 
             "Academic Period", 
             "AcademicPeriodYearINT", 
@@ -1114,7 +1156,8 @@ let
             "Fiscal Year",
             "Fiscal_Year", 
             "Fiscal Quarter", 
-            "FiscalQuarterYearINT", 
+            "FiscalQuarterYearINT",
+            "Fiscal Month", 
             "FiscalPeriodNUM", 
             "Fiscal Period", 
             "FiscalPeriodYearINT", 
@@ -1182,9 +1225,9 @@ let
         optional FYStartMonthNum as (
           type number
             meta [
-              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Apr = 4 ", 
-              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Aug = 4 ", 
-              Documentation.SampleValues     = {08}
+              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Feb = 2 ", 
+              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Feb = 2 ", 
+              Documentation.SampleValues     = {02}
             ]
         )// 3.0.4: Academic Start Month parameter
         , 
@@ -1193,7 +1236,7 @@ let
             meta [
               Documentation.FieldCaption     = " Academic Month Start: #(lf) Aug = 8 ", 
               Documentation.FieldDescription = " Academic Month Start: #(lf) Aug = 8 ", 
-              Documentation.SampleValues     = {123}
+              Documentation.SampleValues     = {08}
             ]
         )// 3.0.5: Holidays list parameter
         , 
@@ -1211,7 +1254,7 @@ let
             meta [
               Documentation.FieldCaption     = " Input weekday start number  ", 
               Documentation.FieldDescription = " Input weekday start number ", 
-              Documentation.SampleValues     = {"123"}
+              Documentation.SampleValues     = {01}
             ]
         )// 3.0.7: AddRelativeNetWorkdays parameter 
         , 
@@ -1234,7 +1277,7 @@ let
         Documentation.LongDescription = " Dates Table with Fiscal and Academic Year ", 
         Documentation.Category = " Calendar Category ", 
         Documentation.Source = "  PBIQUERYOUS  ", 
-        Documentation.Version = " 3.3 (added: FY and AY Quarter OFFSETs)", 
+        Documentation.Version = " 3.3 (added: FY and AY Quarter Offsets)", 
         Documentation.Author = " Imran Haq ", 
         Documentation.Examples = {
           [
