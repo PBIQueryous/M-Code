@@ -57,43 +57,62 @@ let
             Splitter.SplitByNothing(), 
             type table [Date = Date.Type]
           ), 
-          col_Year = Table.AddColumn(make_Table, "YearNUM", each Date.Year([Date]), type number), 
+          
+          // start deriving columns here
+
+          // Year as integer
+          col_Year = Table.AddColumn(make_Table, "YearNUM", each Date.Year([Date]), type number),
+
+          // calendar Year Offset 
           col_YearOFFSET = Table.AddColumn(
             col_Year, 
             "YearOFFSET", 
             each Date.Year([Date]) - Date.Year(Date.From(var_CurrentDate)), 
             type number
           ), 
+
+          // is current calendar year complete as boolean
           col_isYearComplete = Table.AddColumn(
             col_YearOFFSET, 
             "isYearComplete", 
             each Date.EndOfYear([Date]) < Date.From(Date.EndOfYear(var_CurrentDate)), 
             type logical
-          ), 
+          ),
+
+
+          // calendar quarter as integer 
           col_QuarterNUM = Table.AddColumn(
             col_isYearComplete, 
             "QuarterNUM", 
             each Date.QuarterOfYear([Date]), 
             type number
-          ), 
+          ),
+
+          // calendar quart as text 
           col_QuarterTXT = Table.AddColumn(
             col_QuarterNUM, 
             "Quarter", 
             each "Q" & Number.ToText([QuarterNUM]), 
             type text
-          ), 
+          ),
+
+          // start of calendar quarter as date 
           col_QuarterSTART = Table.AddColumn(
             col_QuarterTXT, 
             "Start of Quarter", 
             each Date.StartOfQuarter([Date]), 
             type date
-          ), 
+          ),
+
+          // end of calendar quarter as date 
           col_QuarterEND = Table.AddColumn(
             col_QuarterSTART, 
             "End of Quarter", 
             each Date.EndOfQuarter([Date]), 
             type date
-          ), 
+          ),
+
+          // calendar quarter & year as text (Q1 23) 
           col_Quarter_Year = Table.AddColumn(
             col_QuarterEND, 
             "Quarter & Year", 
@@ -102,12 +121,16 @@ let
               & Date.ToText([Date], [Format = " yy"]), 
             type text
           ), 
+
+          // calendar quarter and year as integer key (202302)
           col_QuarterYearINT = Table.AddColumn(
             col_Quarter_Year, 
             "QuarterYearINT", 
             each [YearNUM] * 10 + [QuarterNUM], 
             type number
           ), 
+
+          // calendar quarter offset
           col_QuarterOFFSET = Table.AddColumn(
             col_QuarterYearINT, 
             "QuarterOFFSET", 
@@ -118,6 +141,8 @@ let
               ), 
             type number
           ), 
+
+          // is current quarter complete as boolean
           col_isQuarterComplete = Table.AddColumn(
             col_QuarterOFFSET, 
             "isQuarterComplete", 
@@ -130,36 +155,48 @@ let
                 isQtrComplete, 
             type logical
           ), 
+
+          // calendar month num
           col_MonthNUM = Table.AddColumn(
             col_isQuarterComplete, 
             "MonthNUM", 
             each Date.Month([Date]), 
             type number
           ), 
+
+          // calendar month start date
           col_MonthSTART = Table.AddColumn(
             col_MonthNUM, 
             "Start of Month", 
             each Date.StartOfMonth([Date]), 
             type date
           ), 
+
+          // calendar month end date
           col_MonthEND = Table.AddColumn(
             col_MonthSTART, 
             "End of Month", 
             each Date.EndOfMonth([Date]), 
             type date
           ), 
+
+          // calendar month and year as text
           col_CalendarMONTH = Table.AddColumn(
             col_MonthEND, 
             "Month & Year", 
             each Text.Proper(Date.ToText([Date], [Format = "MMM yy"])), 
             type text
           ), 
+
+          // calendar month and year as integer key (20230001)
           col_MonthYearINT = Table.AddColumn(
             col_CalendarMONTH, 
             "MonthYearINT", 
             each [YearNUM] * 100 + [MonthNUM], 
             type number
           ), 
+
+          // calendar month offset
           col_MonthOFFSET = Table.AddColumn(
             col_MonthYearINT, 
             "MonthOFFSET", 
@@ -170,24 +207,32 @@ let
               ), 
             type number
           ), 
+
+          // is month complete as boolean
           col_isMonthComplete = Table.AddColumn(
             col_MonthOFFSET, 
             "isMonthComplete", 
             each Date.EndOfMonth([Date]) < Date.From(Date.EndOfMonth(var_CurrentDate)), 
             type logical
           ), 
+
+          // month long name
           col_MonthNAME = Table.AddColumn(
             col_isMonthComplete, 
             "Month Name", 
             each Text.Proper(Date.ToText([Date], "MMMM")), 
             type text
           ), 
+
+          // month short name
           col_MonthNameSHORT = Table.AddColumn(
             col_MonthNAME, 
             "Month Short", 
             each Text.Proper(Date.ToText([Date], "MMM")), 
             type text
           ), 
+
+          // month initial
           col_MonthNameINITIAL = Table.AddColumn(
             col_MonthNameSHORT, 
             "Month Initial", 
@@ -195,21 +240,33 @@ let
               & Text.Repeat(Character.FromNumber(8203), Date.Month([Date])), 
             type text
           ), 
+
+          // variable (current month name)
           var_CurrentMonthName = Date.MonthName(DateTime.LocalNow()), 
+
+          // month selection (if month name = variable_crrentMonthName, then "Current" else [Month Short] )
           col_MonthSelection = Table.AddColumn(
             col_MonthNameINITIAL, 
             "Month Selection", 
             each if [Month Name] = var_CurrentMonthName then "Current" else [Month Short], 
             type text
           ), 
+
+          // fiscal month ( duplicate for report purposes - needs fiscal month sort order)
           col_FiscalMonth = Table.DuplicateColumn(col_MonthSelection, "Month Short", "Fiscal Month", type text),
+
+          // academic month ( duplicate for report purposes - needs academic month sort order)
           col_AcademicMonth = Table.DuplicateColumn(col_FiscalMonth, "Month Short", "Academic Month", type text),
+          
+          // add day month number
           col_DayMonthNUM = Table.AddColumn(
             col_AcademicMonth, 
             "DayMonthNUM", 
             each Date.Day([Date]), 
             type number
           ), 
+
+          // calendar week number
           col_WeekNUM = Table.AddColumn(
             col_DayMonthNUM, 
             "Week Number", 
@@ -241,18 +298,24 @@ let
                 ), 
             type number
           ), 
+
+          // calendar week start date
           col_WeekSTART = Table.AddColumn(
             col_WeekNUM, 
             "Start of Week", 
             each Date.StartOfWeek([Date], Day.Monday), 
             type date
           ), 
+
+          // calendar week end date
           col_WeekEND = Table.AddColumn(
             col_WeekSTART, 
             "End of Week", 
             each Date.EndOfWeek([Date], Day.Monday), 
             type date
           ), 
+
+          // week and year as text
           col_CalendarWEEK = Table.AddColumn(
             col_WeekEND, 
             "Week & Year", 
@@ -265,6 +328,8 @@ let
               ), 
             type text
           ), 
+
+          // week year integer
           col_WeekYearINT = Table.AddColumn(
             col_CalendarWEEK, 
             "WeekYearINT", 
@@ -1005,16 +1070,20 @@ let
             each if [AcademicYearOFFSET] = - 1 then true else false, 
             type logical
           ), 
+          col_NewStartsSwitch = Table.AddColumn(col_isPrevAY, "New Starts Only Filter", each if [IsCurrentAY] = true then "Show AY New Starts Only" else null, type text), 
+          col_Last15Months = Table.AddColumn(col_NewStartsSwitch, "IsLast15months", each if [MonthOFFSET] >= -15 then "Last 15-months" else null, type text),         
           col_NetWorkDays = 
             if AddRelativeNetWorkdays = true then
               Table.AddColumn(
-                col_isPrevAY, 
+                col_Last15Months, 
                 "Relative Networkdays", 
                 each fxNETWORKDAYS(StartDate, [Date], Holidays), 
                 type number
               )
             else
-              col_isPrevAY, 
+              col_Last15Months, 
+
+          // function starts here
           fxNETWORKDAYS = (StartDate, EndDate, optional Holidays as list) =>
             let
               list_Dates = List.Dates(
@@ -1030,7 +1099,11 @@ let
               DeleteWeekends = List.Select(DeleteHolidays, each Date.DayOfWeek(_, Day.Monday) < 5), 
               CountDays = List.Count(DeleteWeekends)
             in
-              CountDays, 
+              CountDays,
+
+          // function ends here
+
+
           cols_RemoveToday = Table.RemoveColumns(
             if EndDate < var_CurrentDate then
               Table.SelectRows(col_NetWorkDays, each ([Date] <> var_CurrentDate))
