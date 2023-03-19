@@ -36,7 +36,7 @@ let
           // WDStartNum = 1,
           // AddRelativeNetWorkdays = true,
 
-// //-- Date table code
+        // //-- Date table code
 
           StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn ON for CUSTOM FN
           EndDate = Date.From("31/12/" & Text.From(EndYearNUM)),  // -- turn ON for CUSTOM FN 
@@ -833,6 +833,20 @@ let
               null, 
             type number
           ), 
+          col_AYSelection = Table.AddColumn(
+            col_AcademicYearOFFSET, 
+            "AY Selection", 
+            each if [AcademicYearOFFSET] = 0 then "Current AY" else [Academic_Year], 
+            type text
+          ),
+          col_FYSelection = Table.AddColumn(
+            col_AYSelection, 
+            "FY Selection", 
+            each if [FiscalYearOFFSET] = 0 then "Current FY" else [Fiscal_Year], 
+            type text
+          ),
+
+          //-- enter function here
           fn_GetAcQtrOFFSET = 
             let
               fxAddFiscalQuarterOFFSET = (Date as date, FiscalYearStartMonth as number) as number =>
@@ -855,8 +869,10 @@ let
                   FiscalQuarterOFFSET
             in
               fxAddFiscalQuarterOFFSET, 
+
+          //-- Restart table here
           col_AYQtrOFFSET = Table.AddColumn(
-            col_AcademicYearOFFSET, 
+            col_FYSelection, 
             "AcademicQuarterOFFSET", 
             each fn_GetAcQtrOFFSET([Date], AYStartMonth), 
             Int64.Type
@@ -1056,8 +1072,10 @@ let
             {
               "Academic Year",
               "Academic_Year",
+              "AY Selection",
               "Fiscal Year", 
-              "Fiscal_Year", 
+              "Fiscal_Year",
+              "FY Selection", 
               "Date", 
               "IsYTD",
               "IsFuture",
@@ -1135,6 +1153,7 @@ let
           AYCols = {
             "Academic Year",
             "Academic_Year",
+            "AY Selection",
             "Academic Quarter", 
             "AcademicQuarterYearINT",
             "Academic Month", 
@@ -1154,7 +1173,8 @@ let
           FYCols = {
             "ISO QuarterNUM", 
             "Fiscal Year",
-            "Fiscal_Year", 
+            "Fiscal_Year",
+            "FY Selection", 
             "Fiscal Quarter", 
             "FiscalQuarterYearINT",
             "Fiscal Month", 
