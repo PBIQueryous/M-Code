@@ -11,6 +11,10 @@ let
   Special Thanks: SQLBI (Alberto Ferrari and Marco Russo)
   Link: https://www.sqlbi.com/
  ---------------------------------*/
+// NOTE: Requires an Key on the FACT Table: 
+// OriginalID = Date.Year([Date]) * MonthsInYear + Date.Month([Date]) - 1
+// or ActualYearMonthID = YYYYMM (202314)
+
   // 1.0: invoke function & define parameter inputs
   
     let
@@ -18,24 +22,24 @@ let
         minYear as number, 
         maxYear as number, 
         MonthsInYear as number, 
-        optional AYMonthNUM as number
+        optional FYMonthNUM as number
       ) as table =>
         // ------------------------------------------------------------------
         // 2.0: function transformations
         let
-          // // //Parameters
-          // StartDate = #date(2023, 1, 1),
-          // EndDate = #date(2024, 12, 31),
-          // minYear = 2021,
-          // maxYear = 2023,
-          // MonthsInYear = 14,
-          // AYMonthNUM = 8,
+        //   // // //Parameters
+        // //   StartDate = #date(2023, 1, 1),
+        // //   EndDate = #date(2024, 12, 31),
+        //   minYear = 2021,
+        //   maxYear = 2023,
+        //   MonthsInYear = 14,
+        //   FYMonthNUM = null,
           //----------------------------------------------------------\\      
           //Date table code                 
-  AYMonthStart = List.Select({1 .. 12}, each _ = AYMonthNUM){0}? ?? 1,
-  StartDate = Date.From("01/" & Text.From(AYMonthNUM) & "/" & Text.From(minYear)),
+  FYMonthStart = List.Select({1 .. 12}, each _ = FYMonthNUM){0}? ?? 1,
+  StartDate = Date.From("01/" & Text.From(FYMonthStart) & "/" & Text.From(minYear)),
   EndDate = Date.EndOfMonth(
-    Date.From("1/" & Text.From(AYMonthStart + (MonthsInYear - 12) - 1) & "/" & Text.From(maxYear))
+    Date.From("1/" & Text.From(FYMonthStart + (MonthsInYear - 12) - 1) & "/" & Text.From(maxYear))
   ),
   StartYear = minYear,
   StartMonth = Date.Month(StartDate),
@@ -78,7 +82,7 @@ let
         xStartYear  = StartYear,
         xMonths     = MonthsInYear,
         xStartMonth = StartMonth,
-        xCalc1      = if (xStartMonth < AYMonthStart) then 1 else 0,
+        xCalc1      = if (xStartMonth < FYMonthStart) then 1 else 0,
         xCalc2      = (xStartYear * xMonths + xStartMonth) - 1,
         xCalc3      = (xMonths - 12) * xCalc1,
         xResult     = xCalc2 - xCalc3
@@ -91,7 +95,7 @@ let
         xEndYear  = EndYear,
         xMonths   = MonthsInYear,
         xEndMonth = EndMonth,
-        xCalc1    = if (xEndMonth < AYMonthStart) then 1 else 0,
+        xCalc1    = if (xEndMonth < FYMonthStart) then 1 else 0,
         xCalc2    = (xEndYear * xMonths + xEndMonth) - 1,
         xCalc3    = (xMonths - 12) * xCalc1,
         xResult   = xCalc2 - xCalc3
@@ -117,15 +121,15 @@ let
   col_Rename = Table.RenameColumns(tbl_MonthlyGrain, {{"Column1", "OG_MonthYear_ID"}}),
   col_INT = Table.TransformColumnTypes(col_Rename, {{"OG_MonthYear_ID", Int64.Type}}),
   tbl_choose = if MonthsInYear > 12 then col_INT else col_DataGrainOG,
-  col_AcademicMonth = Table.AddColumn(
+  col_FiscalMonth = Table.AddColumn(
     tbl_choose,
-    "AcademicMonth_NUM",
+    "FiscalMonth_NUM",
     each
       let
         result = [
           xMonthInt = [OG_MonthYear_ID] + 1,
-          xCond1    = if (AYMonthStart > 1) then 1 else 0,
-          xCalc1    = MonthsInYear + 1 - AYMonthStart,
+          xCond1    = if (FYMonthStart > 1) then 1 else 0,
+          xCalc1    = MonthsInYear + 1 - FYMonthStart,
           xMod      = [OG_MonthYear_ID] + (1 * xCond1 * xCalc1),
           xResult   = Number.Mod(xMod, MonthsInYear) + 1
         ]
@@ -148,20 +152,20 @@ let
     in
       invokeFunction,
   col_GetActualMonth = Table.AddColumn(
-    col_AcademicMonth,
+    col_FiscalMonth,
     "ActualMonth_NUM",
-    each fn_GetMonth([AcademicMonth_NUM], AYMonthStart),
+    each fn_GetMonth([FiscalMonth_NUM], FYMonthStart),
     Int64.Type
   ),
-  col_AcYearNUM = Table.AddColumn(
+  col_FiscalYearNUM = Table.AddColumn(
     col_GetActualMonth,
-    "AcademicYear_NUM",
+    "FiscalYear_NUM",
     each
       let
         result = [
           xMonthInt = [OG_MonthYear_ID],
-          xCond1    = if (AYMonthStart > 1) then 1 else 0,
-          xCalc1    = MonthsInYear + 1 - AYMonthStart,
+          xCond1    = if (FYMonthStart > 1) then 1 else 0,
+          xCalc1    = MonthsInYear + 1 - FYMonthStart,
           xMod      = xMonthInt + (1 * xCond1 * xCalc1),
           xResult   = Number.IntegerDivide(xMod, MonthsInYear) - 1
         ]
@@ -170,47 +174,47 @@ let
     Int64.Type
   ),
   col_YearNUM = Table.AddColumn(
-    col_AcYearNUM,
+    col_FiscalYearNUM,
     "ActualYear_NUM",
     each
       let
-        x1 = if [ActualMonth_NUM] > [AcademicMonth_NUM] then 1 else 0,
-        x2 = ([AcademicYear_NUM] - 1 * x1) + 1
+        x1 = if [ActualMonth_NUM] > [FiscalMonth_NUM] then 1 else 0,
+        x2 = ([FiscalYear_NUM] - 1 * x1) + 1
       in
         x2,
     Int64.Type
   ),
-  var_AcMonthOFFSET = MonthsInYear + 1 - (MonthsInYear - 12),
+  var_FiscalMonthOFFSET = MonthsInYear + 1 - (MonthsInYear - 12),
   col_YearMonthID = Table.AddColumn(
     col_YearNUM,
     "ActualYearMonth_ID",
     each
       let
         cols = [
-          cond1          = [AcademicMonth_NUM] <= 12 and AYMonthStart > 1,
-          calc1          = [AcademicMonth_NUM] + AYMonthStart,
-          calc2          = var_AcMonthOFFSET - AYMonthStart,
-          cond2          = if [AcademicMonth_NUM] > calc2 then var_AcMonthOFFSET else 1,
+          cond1          = [FiscalMonth_NUM] <= 12 and FYMonthStart > 1,
+          calc1          = [FiscalMonth_NUM] + FYMonthStart,
+          calc2          = var_FiscalMonthOFFSET - FYMonthStart,
+          cond2          = if [FiscalMonth_NUM] > calc2 then var_FiscalMonthOFFSET else 1,
           calc3          = (calc1 - cond2),
-          MonthID        = if cond1 then calc3 else [AcademicMonth_NUM],
-          condX          = if MonthID > [AcademicMonth_NUM] then 1 else 0,
-          ActualYear_NUM = [AcademicYear_NUM] * condX,
+          MonthID        = if cond1 then calc3 else [FiscalMonth_NUM],
+          condX          = if MonthID > [FiscalMonth_NUM] then 1 else 0,
+          ActualYear_NUM = [FiscalYear_NUM] * condX,
           YearMonth_ID   = [ActualYear_NUM] * 100 + MonthID
         ]
       in
         cols[YearMonth_ID],
     Int64.Type
   ),
-  col_AcYearMonthID = Table.AddColumn(
+  col_FiscalYearMonthID = Table.AddColumn(
     col_YearMonthID,
-    "AcYearMonth_ID",
-    each [AcademicYear_NUM] * 100 + [AcademicMonth_NUM],
+    "FiscalYearMonth_ID",
+    each [FiscalYear_NUM] * 100 + [FiscalMonth_NUM],
     Int64.Type
   ),
   col_CalendarMonth = Table.AddColumn(
-    col_AcYearMonthID,
+    col_FiscalYearMonthID,
     "RelativeMonth_NUM",
-    each if [AcademicMonth_NUM] >= 12 then 7 else [ActualMonth_NUM],
+    each if [FiscalMonth_NUM] >= 12 then 7 else [ActualMonth_NUM],
     Int64.Type
   ),
   col_Month_Actual = Table.AddColumn(
@@ -240,7 +244,7 @@ let
   col_Return = Table.AddColumn(
     col_RelativeMonthEnd,
     "Return",
-    each "R" & Text.PadStart(Text.From([AcademicMonth_NUM]), 2, "0"),
+    each "R" & Text.PadStart(Text.From([FiscalMonth_NUM]), 2, "0"),
     type text
   ),
   col_ActualMonthName = Table.AddColumn(
@@ -260,62 +264,62 @@ let
     "Month Period",
     each
       let
-        x0 = Text.PadStart(Text.From([AcademicMonth_NUM]), 2, "0"),
-        x1 = if [AcademicMonth_NUM] <= 12 then [RelativeMonth_Name] else "P" & x0
+        x0 = Text.PadStart(Text.From([FiscalMonth_NUM]), 2, "0"),
+        x1 = if [FiscalMonth_NUM] <= 12 then [RelativeMonth_Name] else "P" & x0
       in
         x1,
     type text
   ),
-  col_AcademicPeriod = Table.AddColumn(
+  col_FiscalPeriod = Table.AddColumn(
     col_MonthPeriod,
-    "Academic Period",
+    "Fiscal Period",
     each
       let
-        StartYear = Text.End(Text.From([AcademicYear_NUM]), 2),
-        EndYear   = Text.End(Text.From([AcademicYear_NUM] + 1), 2)
+        StartYear = Text.End(Text.From([FiscalYear_NUM]), 2),
+        EndYear   = Text.End(Text.From([FiscalYear_NUM] + 1), 2)
       in
         StartYear & "/" & EndYear,
     type text
   ),
   col_Quarter = Table.AddColumn(
-    col_AcademicPeriod,
+    col_FiscalPeriod,
     "Quarter",
     each "Q" & Text.From(Date.QuarterOfYear([Actual_Date])),
     type text
   ),
-  col_AcademicQuarter = Table.AddColumn(
+  col_FiscalQuarter = Table.AddColumn(
     col_Quarter,
-    "Academic Quarter",
+    "Fiscal Quarter",
     each
       let
-        xCol   = [AcademicMonth_NUM],
+        xCol   = [FiscalMonth_NUM],
         x1     = xCol >= 1 and xCol <= 3,
         x2     = xCol >= 4 and xCol <= 6,
         x3     = xCol >= 7 and xCol <= 9,
         x4     = xCol >= 10 and xCol <= 12,
-        result = if x1 then "AQ1" else if x2 then "AQ2" else if x3 then "AQ3" else "AQ4"
+        result = if x1 then "FQ1" else if x2 then "FQ2" else if x3 then "FQ3" else "FQ4"
       in
         result,
     type text
   ),
   col_MonthOFFSET = Table.AddColumn(
-    col_AcademicQuarter,
+    col_FiscalQuarter,
     "MonthOFFSET",
     each ((12 * Date.Year([Relative_Date])) + Date.Month([Relative_Date]))
       - ((12 * Date.Year(Date.From(var_CurrentDate))) + Date.Month(Date.From(var_CurrentDate))),
     type number
   ),
-  col_AcYearOFFSET = Table.AddColumn(
+  col_FiscalYearOFFSET = Table.AddColumn(
     col_MonthOFFSET,
-    "AcademicYearOFFSET",
+    "FiscalYearOFFSET",
     each try
-      (if [RelativeMonth_NUM] >= AYMonthStart then [ActualYear_NUM] + 1 else [ActualYear_NUM])
-        - (if var_CurrentMonth >= AYMonthStart then var_CurrentYear + 1 else var_CurrentYear)
+      (if [RelativeMonth_NUM] >= FYMonthStart then [ActualYear_NUM] + 1 else [ActualYear_NUM])
+        - (if var_CurrentMonth >= FYMonthStart then var_CurrentYear + 1 else var_CurrentYear)
     otherwise
       null,
     type number
   ),
-  fn_AcQtrOFFSET =
+  fn_FiscalQuarterOFFSET =
     let
       fxAddFiscalQuarterOffset = (Date as date, FiscalYearStartMonth as number) as number =>
         let
@@ -337,50 +341,50 @@ let
           FiscalQuarterOffset
     in
       fxAddFiscalQuarterOffset,
-  col_AcQtrOFFSET = Table.AddColumn(
-    col_AcYearOFFSET,
-    "AcQtrOFFSET",
-    each fn_AcQtrOFFSET([Actual_Date], AYMonthStart),
+  col_FiscalQuarterOFFSET = Table.AddColumn(
+    col_FiscalYearOFFSET,
+    "FiscalQuarterOFFSET",
+    each fn_FiscalQuarterOFFSET([Actual_Date], FYMonthStart),
     Int64.Type
   ),
-  col_AcQtrYear = Table.AddColumn(
-    col_AcQtrOFFSET,
-    "Academic Quarter & Year",
-    each "AQ"
+  col_FiscalQuarterYear = Table.AddColumn(
+    col_FiscalQuarterOFFSET,
+    "Fiscal Quarter & Year",
+    each "FQ"
       & Text.From(
-        Number.RoundUp(Date.Month(Date.AddMonths([Relative_Date], - (AYMonthStart - 1))) / 3)
+        Number.RoundUp(Date.Month(Date.AddMonths([Relative_Date], - (FYMonthStart - 1))) / 3)
       )
       & " "
       & (
-        if [RelativeMonth_NUM] >= AYMonthStart and AYMonthStart > 1 then
+        if [RelativeMonth_NUM] >= FYMonthStart and FYMonthStart > 1 then
           Text.End(Text.From([ActualYear_NUM] + 0), 2)
         else
           Text.End(Text.From([ActualYear_NUM] - 1), 2)
       ),
     type text
   ),
-  col_PeriodReturn = Table.AddColumn(col_AcQtrYear, "Period Return", each [Academic Period] & ": " & [Return] & " - " & Date.ToText( [Actual_Date] , [Format = "MMM-yy"] ), type text),
+  col_PeriodReturn = Table.AddColumn(col_FiscalQuarterYear, "Period Return", each [Fiscal Period] & ": " & [Return] & " - " & Date.ToText( [Actual_Date] , [Format = "MMM-yy"] ), type text),
     col_ReturnDate = Table.AddColumn(col_PeriodReturn, "Return Date", each [Return] & " - " & Date.ToText( [Actual_Date] , [Format = "MMM-yy"] ), type text),
     col_isMonthComplete = Table.AddColumn(col_ReturnDate, "isMonthComplete", each Date.EndOfMonth([Actual_Date]) < Date.From(Date.EndOfMonth(var_CurrentDate)) , type logical),
     col_maxDate = Table.AddColumn(col_isMonthComplete, "maxDate", each let
 cond1 = [isMonthComplete],
-cond2 = if cond1 and [AcademicYearOFFSET] = 0 then [ActualMonth_End] else null,
+cond2 = if cond1 and [FiscalYearOFFSET] = 0 then [ActualMonth_End] else null,
 result = cond2
 in
 result, type date ),
-  list_AllHeaders = Table.ColumnNames(col_AcQtrYear),
+  list_AllHeaders = Table.ColumnNames(col_FiscalQuarterYear),
   list_Columns = {
     "OG_MonthYear_ID",
     "ActualYearMonth_ID",
-    "AcYearMonth_ID",
-    "Academic Period",
+    "FiscalYearMonth_ID",
+    "Fiscal Period",
     "Actual_Date",
     "Relative_Date",
     "ActualMonth_End",
     "RelativeMonth_End",
-    "AcademicYear_NUM",
+    "FiscalYear_NUM",
     "ActualYear_NUM",
-    "AcademicMonth_NUM",
+    "FiscalMonth_NUM",
     "ActualMonth_NUM",
     "ActualMonth_Name",
     "RelativeMonth_NUM",
@@ -389,10 +393,10 @@ result, type date ),
     "Month Period",
     "MonthOFFSET",
     "Quarter",
-    "Academic Quarter",
-    "AcQtrOFFSET",
-    "Academic Quarter & Year",
-    "AcademicYearOFFSET"
+    "Fiscal Quarter",
+    "FiscalQuarterOFFSET",
+    "Fiscal Quarter & Year",
+    "FiscalYearOFFSET"
   },
   cols_Reorder = Table.ReorderColumns(col_maxDate, list_Columns)
 in
@@ -403,7 +407,7 @@ in
     minYear as number,
     maxYear as number, 
     MonthsInYear as number, 
-    optional AYMonthNUM as number
+    optional FYMonthNUM as number
 */
       // 3.0: change parameter metadata here
       fnType = type function (
@@ -433,13 +437,13 @@ in
               Documentation.FieldDescription = " Total Months in Custom Period: #(lf) (eg: 14) ", 
               Documentation.SampleValues     = {14}
             ]
-        )// 3.0.4: Academic Start Month parameter
+        )// 3.0.4: Fiscal Start Month parameter
         , 
-        optional AYMonthNUM as (
+        optional FYMonthNUM as (
           type number
             meta [
-              Documentation.FieldCaption     = " Academic Month Start: #(lf) (eg: Aug = 8) ", 
-              Documentation.FieldDescription = " Academic Month Start: #(lf) (eg: Aug = 8, etc) ", 
+              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) (eg: Aug = 8) ", 
+              Documentation.FieldDescription = " Fiscal Month Start: #(lf) (eg: Aug = 8, etc) ", 
               Documentation.SampleValues     = {123}
             ]
         )
