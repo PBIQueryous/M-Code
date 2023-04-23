@@ -46,12 +46,14 @@ let
         build_Table, 
         "_Table", 
         each [
+          EndOfMonth = Date.EndOfMonth([Date]),       // add column for year number
           Year = Date.Year([Date]),                   // add column for year number                          
           Month = Date.MonthName([Date]),             // add column for month name                     
           MonthNUM = Date.Month([Date]),              // add column Month Number                       
           MonthYEAR = Date.ToText([Date], "MMM-yy")   // add column for short Month and Year, e.g. Jan 2023
           ], 
         type [
+          EndOfMonth = date,  // EndOfMOnth as date
           Year = number,      // year as number
           Month = text,       // month as text
           MonthNUM = number,  // monthNum as number
@@ -59,12 +61,9 @@ let
           ]
       ),  
 
-      expandColumns = Table.ExpandRecordColumn(
-        add_Records, 
-        "_Table", 
-        {"Year", "Month", "MonthNUM", "MonthYEAR"}, // expand records to columns
-        {"Year", "Month", "MonthNUM", "MonthYEAR"}  // (re)name column headers
-      )
+      list_FieldNames = Record.FieldNames ( Record.Combine ( add_Records[_Table] ) ),
+      data_table = add_Records,
+      expandColumns = Table.ExpandRecordColumn(data_table, "_Table", list_FieldNames, list_FieldNames)
     in
       expandColumns
       , 
@@ -73,7 +72,7 @@ let
 // change parameter metadata here
       fnType = type function (
         Start_Year as (
-          type text
+          type number
             meta 
             [
               Documentation.FieldCaption     = " Input Start Year: #(lf) (Year Integer) ", 
@@ -86,7 +85,7 @@ let
         )
         ,
         End_Year as (
-          type text
+          type number
             meta 
             [
               Documentation.FieldCaption     = " Input End Year: #(lf) (Year Integer) ", 
@@ -103,13 +102,13 @@ let
       documentation = 
       [  
 
-          Documentation.Name                        = " fnMonthlyCalendar ", 
-          Documentation.Description                 = " Generate a calendar in monthly increments between Start & End Year input ", 
-          Documentation.LongDescription             = " Generate a calendar in monthly increments between Start & End Year input ", 
-          Documentation.Category                    = " Dates ", 
-          Documentation.Source                      = "  PBIQUERYOUS  ", 
-          Documentation.Version                     = " 1.0 ", 
-          Documentation.Author                      = " Imran Haq ", 
+          Documentation.Name             = " fnMonthlyCalendar ", 
+          Documentation.Description      = " Generate a calendar in monthly increments between Start & End Year input ", 
+          Documentation.LongDescription  = " Generate a calendar in monthly increments between Start & End Year input ", 
+          Documentation.Category         = " Dates ", 
+          Documentation.Source           = "  PBIQUERYOUS  ", 
+          Documentation.Version          = " 1.0 ", 
+          Documentation.Author           = " Imran Haq ", 
           Documentation.Examples = 
           {
             [
@@ -136,6 +135,6 @@ let
     in
 // ------------------------------------------------------------------
 // select one of the above steps and paste below
-      funtionDocumentation      /* <-- Choose final documentation type */
+      parameterDocumentation      /* <-- Choose final documentation type */
 in
   fn
