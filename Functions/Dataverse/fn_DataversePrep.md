@@ -1,5 +1,7 @@
 # fn_GetCustomDataverseObjects
---- ioke
+
+``` ioke
+
 let
   invokeFunction = (dataverseRootURL as text, dataversePrefix as text, optional dataverseTableName as text) =>
     let
@@ -31,4 +33,4 @@ let
 in
   invokeFunction
 
----
+```
