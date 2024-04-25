@@ -1,16 +1,73 @@
-
-
 let
-  customFunction =  // fn_Dates     AYStartDate                                        
-  /* ------------------------------ 
-  Author: Imran Haq - PBI QUERYOUS
-  Description: fn_Dates
-  Special Thanks: Melissa de Korte (Enterprise DNA)
-  Link: https://analysthub.enterprisedna.co/apps/m-code?id=tbzgom0a
- ---------------------------------*/
-  // 1.0: invoke function & define parameter inputs
+  customFunction =
+// 1.0: invoke function & define parameter inputs
   
     let
+     // 4.0: edit function metadata here
+      documentation = [
+        // Inspired by Enterprise DNA - Melissa de Korte (https://www.youtube.com/watch?v=H8F60sgQZOI)
+        Documentation.Name = " fnDates ", 
+        Documentation.Description = " Dates Table with Fiscal and Academic Year ", 
+        Documentation.LongDescription = "    
+                <p><b>  Date Table Generator  </b></p>
+
+                <li>------------------------------------------------------</li>
+                
+                <li><b>  Creator: </b> Imran Haq  </li>
+                <li><b>  Web: </b> https://github.com/PBIQueryous/M-Code/tree/main/Calendars  </li>
+                <li><b>  Acknowledgements: </b> Melissa de Korte  </li>
+                <li><b>  LinkedIn: </b> (https://www.linkedin.com/in/melissa-de-korte/)  </li>
+
+                <li>------------------------------------------------------</li>
+
+                <li><b>  Editor: </b>  Oscar Martinez  </li>
+                <li><b>  Web: </b>  https://bibb.pro  </li>
+                <li><b>  LinkedIn: </b>  https://www.linkedin.com/in/oscarmartinezv/  </li>
+
+                <li>------------------------------------------------------</li>
+
+                <p><b>  Function Description:  </b></p>
+                <p>  This function generates a date table with a range of dates from the start year to the end year. Additional parameters are available generate Fiscal/Financial and Academic Year columns.  </p>
+                <p><b>  Parameters:  </b></p>
+                <ul>
+                    <li><b>  StartYearNUM:  </b>  The starting year of the date range. <code> (eg: 2023) </code> </li>
+                    <li><b>  EndYearNUM:  </b>  The ending year of the date range. <code> (eg: 2025) </code> </li>
+                    <li><b>  FYStartMonthNUM (optional):  </b>  The fiscal year start month.  <code> (eg: 4) </code> </li>
+                    <li><b>  AYStartMonthNUM (optional):  </b>  The academic year start month.  <code> (eg: 8) </code> </li>
+                    <li><b>  Holidays (optional):  </b>  Provide a list of public holidays.   </li>
+                    <li><b>  WDStartNum (optional):  </b>  Weekday start (1 = Monday, 0 = Sunday).  <code> (eg: null) </code> </li>
+                    <li><b>  AddRelativeNetworkDays (optional):  </b>  Include Relative Network Days.  <code> (eg: null) </code> </li>
+                </ul>
+                <p><b>  Returns:  </b></p>
+                <p>  A date table.  </p>
+
+                <li><b>  fx:  </b> <code> = fnDates(2023, 2025, 4, 8, null, null, null) </code> </li>
+            ", 
+        Documentation.Category = " Dates / Calendar ", 
+        Documentation.Source = "  PBI Queryous  ", 
+        Documentation.Version = " 4.0: Upated for Oscar Valderock", 
+        Documentation.Author = " Imran Haq ", 
+        Documentation.Examples = {
+          [
+            Description = "  Dates Table with Fiscal and Academic Year   ", 
+            Code = " = fnDates(2023, 2025, 4, 8, null, null, null) ", 
+            Result = 
+"
+  1. Input paramaters
+  2. Invoke function
+  3. Optional: replace start / end year parameters with dynamic values to automatically extend table
+
+"
+          ]
+        /* ,
+            [
+            Description = "  description   ",
+            Code    = " code ", 
+            Result  = " result #(cr,lf) new line
+                      #(cr,lf) new line #(cr,lf) 2 "
+            ] */
+        }
+      ], 
       invokeFunction = (StartYearNUM as number,  // start year             
       EndYearNUM as number,  // end year           
       optional FYStartMonthNum as nullable number,  // Fiscal Year Start                    
@@ -32,10 +89,11 @@ let
           // WDStartNum = 1,
           // AddRelativeNetWorkdays = true,
 
-        // // Date table code
+        // //-- Date table code
 
-          StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn on in custom fn
-          EndDate = Date.From("31/12/" & Text.From(EndYearNUM)),  // -- turn on in custom fn                                                                              
+          StartDate = Date.From("01/01/" & Text.From(StartYearNUM)),  // -- turn ON for CUSTOM FN
+          EndDate = Date.From("31/12/" & Text.From(EndYearNUM)),  // -- turn ON for CUSTOM FN 
+                                                                             
           FYStartMonth = List.Select({1 .. 12}, each _ = FYStartMonthNum){0}? ?? 1, 
           AYStartMonth = List.Select({1 .. 12}, each _ = AYStartMonthNum){0}? ?? 1, 
           WDStart = List.Select({0 .. 1}, each _ = WDStartNum){0}? ?? 0, 
@@ -52,43 +110,62 @@ let
             Splitter.SplitByNothing(), 
             type table [Date = Date.Type]
           ), 
-          col_Year = Table.AddColumn(make_Table, "YearNUM", each Date.Year([Date]), type number), 
+          
+          // start deriving columns here
+
+          // Year as integer
+          col_Year = Table.AddColumn(make_Table, "YearNUM", each Date.Year([Date]), type number),
+
+          // calendar Year Offset 
           col_YearOFFSET = Table.AddColumn(
             col_Year, 
-            "CurrYearOffset", 
+            "YearOFFSET", 
             each Date.Year([Date]) - Date.Year(Date.From(var_CurrentDate)), 
             type number
           ), 
+
+          // is current calendar year complete as boolean
           col_isYearComplete = Table.AddColumn(
             col_YearOFFSET, 
             "isYearComplete", 
             each Date.EndOfYear([Date]) < Date.From(Date.EndOfYear(var_CurrentDate)), 
             type logical
-          ), 
+          ),
+
+
+          // calendar quarter as integer 
           col_QuarterNUM = Table.AddColumn(
             col_isYearComplete, 
             "QuarterNUM", 
             each Date.QuarterOfYear([Date]), 
             type number
-          ), 
+          ),
+
+          // calendar quart as text 
           col_QuarterTXT = Table.AddColumn(
             col_QuarterNUM, 
             "Quarter", 
             each "Q" & Number.ToText([QuarterNUM]), 
             type text
-          ), 
+          ),
+
+          // start of calendar quarter as date 
           col_QuarterSTART = Table.AddColumn(
             col_QuarterTXT, 
-            "Start of Quarter", 
+            "Quarter Start", 
             each Date.StartOfQuarter([Date]), 
             type date
-          ), 
+          ),
+
+          // end of calendar quarter as date 
           col_QuarterEND = Table.AddColumn(
             col_QuarterSTART, 
-            "End of Quarter", 
+            "Quarter End", 
             each Date.EndOfQuarter([Date]), 
             type date
-          ), 
+          ),
+
+          // calendar quarter & year as text (Q1 23) 
           col_Quarter_Year = Table.AddColumn(
             col_QuarterEND, 
             "Quarter & Year", 
@@ -97,15 +174,19 @@ let
               & Date.ToText([Date], [Format = " yy"]), 
             type text
           ), 
+
+          // calendar quarter and year as integer key (202302)
           col_QuarterYearINT = Table.AddColumn(
             col_Quarter_Year, 
             "QuarterYearINT", 
             each [YearNUM] * 10 + [QuarterNUM], 
             type number
           ), 
+
+          // calendar quarter offset
           col_QuarterOFFSET = Table.AddColumn(
             col_QuarterYearINT, 
-            "CurrQuarterOffset", 
+            "QuarterOFFSET", 
             each ((4 * Date.Year([Date])) + Date.QuarterOfYear([Date]))
               - (
                 (4 * Date.Year(Date.From(var_CurrentDate)))
@@ -113,6 +194,8 @@ let
               ), 
             type number
           ), 
+
+          // is current quarter complete as boolean
           col_isQuarterComplete = Table.AddColumn(
             col_QuarterOFFSET, 
             "isQuarterComplete", 
@@ -125,39 +208,51 @@ let
                 isQtrComplete, 
             type logical
           ), 
+
+          // calendar month num
           col_MonthNUM = Table.AddColumn(
             col_isQuarterComplete, 
             "MonthNUM", 
             each Date.Month([Date]), 
             type number
           ), 
+
+          // calendar month start date
           col_MonthSTART = Table.AddColumn(
             col_MonthNUM, 
-            "Start of Month", 
+            "Month Start", 
             each Date.StartOfMonth([Date]), 
             type date
           ), 
+
+          // calendar month end date
           col_MonthEND = Table.AddColumn(
             col_MonthSTART, 
-            "End of Month", 
+            "Month End", 
             each Date.EndOfMonth([Date]), 
             type date
           ), 
+
+          // calendar month and year as text
           col_CalendarMONTH = Table.AddColumn(
             col_MonthEND, 
             "Month & Year", 
             each Text.Proper(Date.ToText([Date], [Format = "MMM yy"])), 
             type text
           ), 
+
+          // calendar month and year as integer key (20230001)
           col_MonthYearINT = Table.AddColumn(
             col_CalendarMONTH, 
             "MonthYearINT", 
             each [YearNUM] * 100 + [MonthNUM], 
             type number
           ), 
+
+          // calendar month offset
           col_MonthOFFSET = Table.AddColumn(
             col_MonthYearINT, 
-            "CurrMonthOffset", 
+            "MonthOFFSET", 
             each ((12 * Date.Year([Date])) + Date.Month([Date]))
               - (
                 (12 * Date.Year(Date.From(var_CurrentDate)))
@@ -165,24 +260,32 @@ let
               ), 
             type number
           ), 
+
+          // is month complete as boolean
           col_isMonthComplete = Table.AddColumn(
             col_MonthOFFSET, 
             "isMonthComplete", 
             each Date.EndOfMonth([Date]) < Date.From(Date.EndOfMonth(var_CurrentDate)), 
             type logical
           ), 
+
+          // month long name
           col_MonthNAME = Table.AddColumn(
             col_isMonthComplete, 
             "Month Name", 
             each Text.Proper(Date.ToText([Date], "MMMM")), 
             type text
           ), 
+
+          // month short name
           col_MonthNameSHORT = Table.AddColumn(
             col_MonthNAME, 
             "Month Short", 
             each Text.Proper(Date.ToText([Date], "MMM")), 
             type text
           ), 
+
+          // month initial
           col_MonthNameINITIAL = Table.AddColumn(
             col_MonthNameSHORT, 
             "Month Initial", 
@@ -190,19 +293,33 @@ let
               & Text.Repeat(Character.FromNumber(8203), Date.Month([Date])), 
             type text
           ), 
+
+          // variable (current month name)
           var_CurrentMonthName = Date.MonthName(DateTime.LocalNow()), 
+
+          // month selection (if month name = variable_crrentMonthName, then "Current" else [Month Short] )
           col_MonthSelection = Table.AddColumn(
             col_MonthNameINITIAL, 
             "Month Selection", 
             each if [Month Name] = var_CurrentMonthName then "Current" else [Month Short], 
             type text
           ), 
+
+          // fiscal month ( duplicate for report purposes - needs fiscal month sort order)
+          col_FiscalMonth = Table.DuplicateColumn(col_MonthSelection, "Month Short", "Fiscal Month", type text),
+
+          // academic month ( duplicate for report purposes - needs academic month sort order)
+          col_AcademicMonth = Table.DuplicateColumn(col_FiscalMonth, "Month Short", "Academic Month", type text),
+          
+          // add day month number
           col_DayMonthNUM = Table.AddColumn(
-            col_MonthSelection, 
+            col_AcademicMonth, 
             "DayMonthNUM", 
             each Date.Day([Date]), 
             type number
           ), 
+
+          // calendar week number
           col_WeekNUM = Table.AddColumn(
             col_DayMonthNUM, 
             "Week Number", 
@@ -234,18 +351,24 @@ let
                 ), 
             type number
           ), 
+
+          // calendar week start date
           col_WeekSTART = Table.AddColumn(
             col_WeekNUM, 
-            "Start of Week", 
+            "Week Start", 
             each Date.StartOfWeek([Date], Day.Monday), 
             type date
           ), 
+
+          // calendar week end date
           col_WeekEND = Table.AddColumn(
             col_WeekSTART, 
-            "End of Week", 
+            "Week End", 
             each Date.EndOfWeek([Date], Day.Monday), 
             type date
           ), 
+
+          // week and year as text
           col_CalendarWEEK = Table.AddColumn(
             col_WeekEND, 
             "Week & Year", 
@@ -258,6 +381,8 @@ let
               ), 
             type text
           ), 
+
+          // week year integer
           col_WeekYearINT = Table.AddColumn(
             col_CalendarWEEK, 
             "WeekYearINT", 
@@ -267,7 +392,7 @@ let
           ), 
           col_WeekOFFSET = Table.AddColumn(
             col_WeekYearINT, 
-            "CurrWeekOffset", 
+            "WeekOFFSET", 
             each (
               Number.From(Date.StartOfWeek([Date], Day.Monday))
                 - Number.From(Date.StartOfWeek(var_CurrentDate, Day.Monday))
@@ -318,12 +443,24 @@ let
           ), 
           col_DayOFFSET = Table.AddColumn(
             col_DayMonthYearINT, 
-            "CurrDayOffset", 
+            "DayOffset", 
             each Number.From([Date]) - Number.From(var_CurrentDate), 
             type number
           ), 
-          col_isAfterToday = Table.AddColumn(
+          col_isYTD = Table.AddColumn(
             col_DayOFFSET, 
+            "IsYTD", 
+            each ([Date] <= Date.From(var_CurrentDate)), 
+            type logical
+          ), 
+          col_isFuture = Table.AddColumn(
+            col_isYTD, 
+            "IsFuture", 
+            each not ([Date] <= Date.From(var_CurrentDate)), 
+            type logical
+          ), 
+          col_isAfterToday = Table.AddColumn(
+            col_isFuture, 
             "IsAfterToday", 
             each not ([Date] <= Date.From(var_CurrentDate)), 
             type logical
@@ -603,7 +740,7 @@ let
                 #date(Date.Year([Date]) - 1, FYStartMonth, 1), 
             type date
           ), 
-          col_AcademicFirstDay = Table.AddColumn(
+          col_AYStartDate = Table.AddColumn(
             col_FiscalFirstDay, 
             "AYStartDate", 
             each 
@@ -613,8 +750,8 @@ let
                 #date(Date.Year([Date]) - 1, AYStartMonth, 1), 
             type date
           ), 
-          col_AcademicLastDay = Table.AddColumn(
-            col_AcademicFirstDay, 
+          col_AYEndDate = Table.AddColumn(
+            col_AYStartDate, 
             "AYEndDate", 
             each 
               if [MonthNUM] >= AYStartMonth and AYStartMonth > 1 then
@@ -623,7 +760,28 @@ let
                 Date.AddDays(#date(Date.Year([Date]) - 0, AYStartMonth, 1),-1), 
             type date
           ), 
-          //----- begin sub-ETL stages and return later
+          col_FYStartDate = Table.AddColumn(
+            col_AYEndDate, 
+            "FYStartDate", 
+            each 
+              if [MonthNUM] >= FYStartMonth and FYStartMonth > 1 then
+                #date(Date.Year([Date]) + 0, FYStartMonth, 1)
+              else
+                #date(Date.Year([Date]) - 1, FYStartMonth, 1), 
+            type date
+          ), 
+          col_FYEndDate = Table.AddColumn(
+            col_FYStartDate, 
+            "FYEndDate", 
+            each 
+              if [MonthNUM] >= FYStartMonth and FYStartMonth > 1 then
+                Date.AddDays(#date(Date.Year([Date]) + 1, FYStartMonth, 1),-1)
+              else
+                Date.AddDays(#date(Date.Year([Date]) - 0, FYStartMonth, 1),-1), 
+            type date
+          ),
+          //------------------------------------------\\ 
+          //----- begin sub-ETL stages and return later ----\\
           var_Table = Table.FromList(
             List.Transform(
               {Number.From(var_AcademicCalendarSTART) .. Number.From(EndDate)}, 
@@ -685,7 +843,7 @@ let
           ], 
           //------ return here to begin ETL steps again
           join_Date_DateFW = Table.Join(
-            col_AcademicLastDay, 
+            col_FYEndDate, 
             {"Date"}, 
             cols_Expand2, 
             {"DateFW"}, 
@@ -763,19 +921,19 @@ let
           var_CurrFW = rec_CurrentDate{0}[FiscalWeekYearINT], 
           col_ISOYearOFFSET = Table.AddColumn(
             col_FWYearINT, 
-            "ISO CurrYearOffset", 
+            "ISO YearOFFSET", 
             each [ISO Year] - var_CurrISOYear, 
             type number
           ), 
           col_ISOQuarterOFFSET = Table.AddColumn(
             col_ISOYearOFFSET, 
-            "ISO CurrQuarterOffset", 
+            "ISO QuarterOFFSET", 
             each ((4 * [ISO Year]) + [ISO QuarterNUM]) - ((4 * var_CurrISOYear) + var_CurrISOQtr), 
             type number
           ), 
           col_FiscalYearOFFSET = Table.AddColumn(
             col_ISOQuarterOFFSET, 
-            "Fiscal CurrYearOffset", 
+            "FiscalYearOFFSET", 
             each try
               (if [MonthNUM] >= FYStartMonth then [YearNUM] + 1 else [YearNUM])
                 - (if var_CurrMonth >= FYStartMonth then var_CurrYear + 1 else var_CurrYear)
@@ -785,7 +943,7 @@ let
           ), 
           col_AcademicYearOFFSET = Table.AddColumn(
             col_FiscalYearOFFSET, 
-            "Academic CurrYearOffset", 
+            "AcademicYearOFFSET", 
             each try
               (if [MonthNUM] >= AYStartMonth then [YearNUM] + 1 else [YearNUM])
                 - (if var_CurrMonth >= AYStartMonth then var_CurrYear + 1 else var_CurrYear)
@@ -793,9 +951,29 @@ let
               null, 
             type number
           ), 
+          col_CYSelection = Table.AddColumn(
+            col_AcademicYearOFFSET, 
+            "CY Selection", 
+            each if [YearOFFSET] = 0 then "Current CY" else Text.From([YearNUM]), 
+            type text
+          ),
+          col_AYSelection = Table.AddColumn(
+            col_CYSelection, 
+            "AY Selection", 
+            each if [AcademicYearOFFSET] = 0 then "Current AY" else [Academic_Year], 
+            type text
+          ),
+          col_FYSelection = Table.AddColumn(
+            col_AYSelection, 
+            "FY Selection", 
+            each if [FiscalYearOFFSET] = 0 then "Current FY" else [Fiscal_Year], 
+            type text
+          ),
+
+          //-- enter function here
           fn_GetAcQtrOFFSET = 
             let
-              fxAddFiscalQuarterOffset = (Date as date, FiscalYearStartMonth as number) as number =>
+              fxAddFiscalQuarterOFFSET = (Date as date, FiscalYearStartMonth as number) as number =>
                 let
                   CurrentDate = Date.From(DateTime.LocalNow()), 
                   n = 
@@ -803,7 +981,7 @@ let
                       FiscalYearStartMonth - 1
                     else
                       0, 
-                  FiscalQuarterOffset = (
+                  FiscalQuarterOFFSET = (
                     (4 * Date.Year(Date.AddMonths(Date.StartOfMonth(Date), - n)))
                       + Date.QuarterOfYear(Date.AddMonths(Date.StartOfMonth(Date), - n))
                   )
@@ -812,11 +990,13 @@ let
                         + Date.QuarterOfYear(Date.AddMonths(Date.StartOfMonth(CurrentDate), - n))
                     )
                 in
-                  FiscalQuarterOffset
+                  FiscalQuarterOFFSET
             in
-              fxAddFiscalQuarterOffset, 
+              fxAddFiscalQuarterOFFSET, 
+
+          //-- Restart table here
           col_AYQtrOFFSET = Table.AddColumn(
-            col_AcademicYearOFFSET, 
+            col_FYSelection, 
             "AcademicQuarterOFFSET", 
             each fn_GetAcQtrOFFSET([Date], AYStartMonth), 
             Int64.Type
@@ -871,7 +1051,7 @@ let
           ), 
           col_isPrevYTD = Table.AddColumn(
             col_isCurrFW, 
-            "IsPYTD", 
+            "IsPreviousYTD", 
             each 
               if var_CurrYear - 1 = [YearNUM] and [DayYearNUM] <= rec_CurrentDate{0}[DayYearNUM] then
                 true
@@ -933,32 +1113,56 @@ let
               each [DateFY] <= var_CurrentDate
             )[PrevDateFY]
           ), 
-          col_isPrevFYTD = Table.AddColumn(
+          col_isPrevFY = Table.AddColumn(
             col_isPrevYTD, 
-            "IsPFYTD", 
+            "IsPreviousFY", 
             each 
-              if [Fiscal CurrYearOffset] = - 1 and List.Contains(list_PrevFiscalYearDates, [Date]) then
+              if [FiscalYearOFFSET] = - 1 and List.Contains(list_PrevFiscalYearDates, [Date]) then
                 true
               else
                 false, 
             type logical
           ), 
-          col_isPrevAYTD = Table.AddColumn(
-            col_isPrevFYTD, 
-            "IsPAYTD", 
-            each if [Academic CurrYearOffset] = - 1 then true else false, 
+          col_isPrevAY = Table.AddColumn(
+            col_isPrevFY, 
+            "IsPreviousAY", 
+            each if [AcademicYearOFFSET] = - 1 then true else false, 
             type logical
           ), 
+          
           col_NetWorkDays = 
             if AddRelativeNetWorkdays = true then
               Table.AddColumn(
-                col_isPrevAYTD, 
+                col_isPrevAY, 
                 "Relative Networkdays", 
                 each fxNETWORKDAYS(StartDate, [Date], Holidays), 
                 type number
               )
             else
-              col_isPrevAYTD, 
+              col_isPrevAY, 
+      extend_calendar = 
+      let
+
+date_periods = let
+tbl_weekly = Table.AddColumn( col_NetWorkDays, "2W Date", each if Number.Mod(Date.WeekOfYear([Date]), 2) = 1 then Date.EndOfWeek([Date], Day.Monday) else Date.EndOfWeek(Date.AddDays([Date], - 7), Day.Monday), type date ),
+tbl_fortnightly = Table.AddColumn(tbl_weekly, "2M Date", each Date.EndOfMonth(Date.AddMonths([Date], - (Number.Mod(Date.Month([Date]) - 1, 2)))), type date),
+tbl_quarterly = Table.AddColumn(tbl_fortnightly, "3W Date", each Date.EndOfMonth(Date.AddMonths([Date], - (Number.Mod(Date.Month([Date]) - 1, 3)))), type date),
+tbl_biannually = Table.AddColumn(tbl_fortnightly, "6M Date", each Date.EndOfMonth(Date.AddMonths([Date], - (Number.Mod(Date.Month([Date]) - 1, 6)))), type date),
+tbl_ouputs = tbl_biannually
+in tbl_ouputs,
+
+
+fiscal_academic_periods = let
+     FY_TBL = Table.RenameColumns( Table.Group(  Table.Distinct( Table.SelectColumns(date_periods,{"Month Start", "Month End", "FiscalPeriodYearINT", "FiscalQuarterYearINT"}) , {"FiscalPeriodYearINT"}) , {"FiscalQuarterYearINT"}, {{"Fiscal Quarter Month Start", each List.Min([Month Start]), type date}, {"Fiscal Quarter Month End", each List.Max([Month End]), type date}}) ,{{"FiscalQuarterYearINT", "FiscalKey"}}),
+     AY_TBL = Table.RenameColumns( Table.Group(  Table.Distinct( Table.SelectColumns(date_periods,{"Month Start", "Month End", "AcademicPeriodYearINT", "AcademicQuarterYearINT"}) , {"AcademicPeriodYearINT"}) , {"AcademicQuarterYearINT"}, {{"Academic Quarter Month Start", each List.Min([Month Start]), type date}, {"Academic Quarter Month End", each List.Max([Month End]), type date}}) ,{{"AcademicQuarterYearINT", "AcademicKey"}}),
+     tbl_fiscal = Table.Join(date_periods, {"FiscalQuarterYearINT"}, FY_TBL, {"FiscalKey"}, JoinKind.LeftOuter, JoinAlgorithm.SortMerge ) ,
+     tbl_academic = Table.Join(tbl_fiscal, {"AcademicQuarterYearINT"}, AY_TBL, {"AcademicKey"}, JoinKind.LeftOuter, JoinAlgorithm.SortMerge ),
+     tbl_merges = Table.RemoveColumns( tbl_academic, {"FiscalKey", "AcademicKey"} )
+in tbl_merges
+
+in fiscal_academic_periods,
+
+          // function starts here
           fxNETWORKDAYS = (StartDate, EndDate, optional Holidays as list) =>
             let
               list_Dates = List.Dates(
@@ -974,12 +1178,16 @@ let
               DeleteWeekends = List.Select(DeleteHolidays, each Date.DayOfWeek(_, Day.Monday) < 5), 
               CountDays = List.Count(DeleteWeekends)
             in
-              CountDays, 
+              CountDays,
+
+          // function ends here
+
+
           cols_RemoveToday = Table.RemoveColumns(
             if EndDate < var_CurrentDate then
-              Table.SelectRows(col_NetWorkDays, each ([Date] <> var_CurrentDate))
+              Table.SelectRows(extend_calendar, each ([Date] <> var_CurrentDate))
             else
-              col_NetWorkDays, 
+              extend_calendar, 
             {"DayYearNUM", "FiscalFirstDate"}
           ), 
           cols_Format = Table.TransformColumnTypes(
@@ -991,9 +1199,9 @@ let
               {"DayMonthNUM", Int64.Type}, 
               {"DateINT", Int64.Type}, 
               {"DayWeekNUM", Int64.Type}, 
-              {"ISO CurrYearOffset", Int64.Type}, 
+              {"ISO YearOFFSET", Int64.Type}, 
               {"ISO QuarterYearINT", Int64.Type}, 
-              {"ISO CurrQuarterOffset", Int64.Type}, 
+              {"ISO QuarterOFFSET", Int64.Type}, 
               {"Week Number", Int64.Type}, 
               {"WeekYearINT", Int64.Type}, 
               {"MonthYearINT", Int64.Type}, 
@@ -1001,102 +1209,123 @@ let
               {"FiscalQuarterYearINT", Int64.Type}, 
               {"FiscalPeriodNUM", Int64.Type}, 
               {"FiscalPeriodYearINT", Int64.Type}, 
-              {"CurrWeekOffset", Int64.Type}, 
-              {"CurrMonthOffset", Int64.Type}, 
-              {"CurrQuarterOffset", Int64.Type}, 
-              {"CurrYearOffset", Int64.Type}, 
-              {"Fiscal CurrYearOffset", Int64.Type}, 
-              {"FiscalWeekYearINT", Int64.Type}
+              {"WeekOFFSET", Int64.Type}, 
+              {"MonthOFFSET", Int64.Type}, 
+              {"QuarterOFFSET", Int64.Type}, 
+              {"YearOFFSET", Int64.Type}, 
+              {"FiscalYearOFFSET", Int64.Type}, 
+              {"FiscalWeekYearINT", Int64.Type},
+              {"Fiscal Week Number", Int64.Type},
+              {"DateFW", type date}
             }
           ), 
           cols_Reorder = Table.ReorderColumns(
             cols_Format, 
             {
+              "Date",
+              "CY Selection", 
+              "isYearComplete", 
+              "IsYTD",
+              "YearNUM", 
+              "YearOFFSET", 
               "Academic Year",
               "Academic_Year",
+              "AY Selection",
               "Fiscal Year", 
-              "Fiscal_Year", 
-              "Date", 
-              "YearNUM", 
-              "CurrYearOffset", 
-              "isYearComplete", 
+              "Fiscal_Year",
+              "FY Selection", 
+              "IsFuture",
               "QuarterNUM", 
               "Quarter", 
-              "Start of Quarter", 
-              "End of Quarter", 
+              "Quarter Start", 
+              "Quarter End", 
               "Quarter & Year", 
               "QuarterYearINT", 
-              "CurrQuarterOffset", 
+              "QuarterOFFSET", 
               "isQuarterComplete", 
-              "MonthNUM", 
-              "Start of Month", 
-              "End of Month", 
+              "MonthNUM",
+              "FiscalPeriodNUM",
+              "Fiscal Month",
+              "AcademicPeriodNUM", 
+              "Academic Month",
+              "Month Start", 
+              "Month End", 
               "Month & Year", 
               "MonthYearINT", 
-              "CurrMonthOffset", 
+              "MonthOFFSET", 
               "isMonthComplete", 
               "Month Name", 
               "Month Short", 
               "Month Initial", 
               "DayMonthNUM", 
               "Week Number", 
-              "Start of Week", 
-              "End of Week", 
+              "Week Start", 
+              "Week End", 
               "Week & Year", 
               "WeekYearINT", 
-              "CurrWeekOffset", 
+              "WeekOFFSET", 
               "WeekCompleted", 
               "DayWeekNUM", 
               "Day of Week Name", 
               "Day Initial", 
               "DateINT", 
-              "CurrDayOffset", 
+              "DayOffset", 
               "IsAfterToday", 
               "IsWeekDay", 
               "IsHoliday", 
               "IsBusinessDay", 
               "Day Type", 
               "ISO Year", 
-              "ISO CurrYearOffset", 
+              "ISO YearOFFSET", 
               "ISO QuarterNUM", 
               "ISO Quarter", 
               "ISO Quarter & Year", 
               "ISO QuarterYearINT", 
-              "ISO CurrQuarterOffset", 
-              "Fiscal CurrYearOffset",
+              "ISO QuarterOFFSET", 
+              "FiscalYearOFFSET",
               "FiscalQuarterOFFSET", 
               "Fiscal Quarter", 
               "FiscalQuarterYearINT", 
-              "FiscalPeriodNUM", 
+              "Fiscal Quarter Month Start",
+              "Fiscal Quarter Month End",
               "Fiscal Period", 
               "FiscalPeriodYearINT", 
               "DateFW", 
               "Fiscal Week Number", 
               "Fiscal Week", 
               "FiscalWeekYearINT",
-              "Academic CurrYearOffset", 
-              "AcademicQuarterOFFSET", 
+              "AcademicYearOFFSET", 
+              "AcademicQuarterOFFSET",
+              "Academic Quarter Month Start",
+              "Academic Quarter Month End", 
               "IsCurrentFY", 
               "IsCurrentFQ", 
               "IsCurrentFP", 
               "IsCurrentFW", 
-              "IsPYTD", 
-              "IsPFYTD"
+              "IsPreviousYTD", 
+              "IsPreviousFY",
+              "2W Date",
+              "2M Date",
+              "6M Date"
             }
           ), 
           AYCols = {
             "Academic Year",
             "Academic_Year",
+            "AY Selection",
             "Academic Quarter", 
-            "AcademicQuarterYearINT", 
+            "AcademicQuarterYearINT",
+            "Academic Quarter Month Start",
+            "Academic Quarter Month End", 
+            "Academic Month", 
             "AcademicPeriodNUM", 
             "Academic Period", 
             "AcademicPeriodYearINT", 
-            "Academic CurrYearOffset", 
+            "AcademicYearOFFSET", 
             "AcademicQuarterOFFSET",
             "IsCurrentAQ", 
             "IsCurrentAP", 
-            "IsPAYTD", 
+            "IsPreviousAY", 
             "IsCurrentAY", 
             "AYStartDate",
             "AYEndDate"
@@ -1105,9 +1334,13 @@ let
           FYCols = {
             "ISO QuarterNUM", 
             "Fiscal Year",
-            "Fiscal_Year", 
+            "Fiscal_Year",
+            "FY Selection", 
             "Fiscal Quarter", 
-            "FiscalQuarterYearINT", 
+            "FiscalQuarterYearINT",
+            "Fiscal Quarter Month Start",
+            "Fiscal Quarter Month End",
+            "Fiscal Month", 
             "FiscalPeriodNUM", 
             "Fiscal Period", 
             "FiscalPeriodYearINT", 
@@ -1115,12 +1348,12 @@ let
             "Fiscal Week Number", 
             "Fiscal Week", 
             "FiscalWeekYearINT", 
-            "Fiscal CurrYearOffset",
+            "FiscalYearOFFSET",
             "FiscalQuarterOFFSET",
             "IsCurrentFQ", 
             "IsCurrentFP", 
             "IsCurrentFW", 
-            "IsPFYTD", 
+            "IsPreviousFY", 
             "IsCurrentFY"
           }, 
           AllCols = List.Union({FYCols, AYCols}), 
@@ -1136,8 +1369,8 @@ let
                 cols_Reorder, 
                 {"DateFW", "FiscalWeekYearINT", "ISO QuarterNUM" /* "FiscalPeriodNUM",  */                         }
               )
-        in
-          ListCols
+in
+    ListCols
         , 
       // ------------------------------------------------------------------     
       /*
@@ -1175,9 +1408,9 @@ let
         optional FYStartMonthNum as (
           type number
             meta [
-              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Apr = 4 ", 
-              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Aug = 4 ", 
-              Documentation.SampleValues     = {08}
+              Documentation.FieldCaption     = " Fiscal Month Start: #(lf) Feb = 2 ", 
+              Documentation.FieldDescription = " Fiscal Month Start: #(lf) Feb = 2 ", 
+              Documentation.SampleValues     = {02}
             ]
         )// 3.0.4: Academic Start Month parameter
         , 
@@ -1186,7 +1419,7 @@ let
             meta [
               Documentation.FieldCaption     = " Academic Month Start: #(lf) Aug = 8 ", 
               Documentation.FieldDescription = " Academic Month Start: #(lf) Aug = 8 ", 
-              Documentation.SampleValues     = {123}
+              Documentation.SampleValues     = {08}
             ]
         )// 3.0.5: Holidays list parameter
         , 
@@ -1204,7 +1437,7 @@ let
             meta [
               Documentation.FieldCaption     = " Input weekday start number  ", 
               Documentation.FieldDescription = " Input weekday start number ", 
-              Documentation.SampleValues     = {"123"}
+              Documentation.SampleValues     = {01}
             ]
         )// 3.0.7: AddRelativeNetWorkdays parameter 
         , 
@@ -1219,37 +1452,7 @@ let
       // 3.1: parameter return type   
       ) as list, 
       // ------------------------------------------------------------------
-      // 4.0: edit function metadata here
-      documentation = [
-        // Inspired by Enterprise DNA - Melissa de Korte (https://www.youtube.com/watch?v=H8F60sgQZOI)
-        Documentation.Name = " fnDates ", 
-        Documentation.Description = " Dates Table with Fiscal and Academic Year ", 
-        Documentation.LongDescription = " Dates Table with Fiscal and Academic Year ", 
-        Documentation.Category = " Calendar Category ", 
-        Documentation.Source = "  PBIQUERYOUS  ", 
-        Documentation.Version = " 3.3 (added: FY and AY Quarter Offsets)", 
-        Documentation.Author = " Imran Haq ", 
-        Documentation.Examples = {
-          [
-            Description = "  Dates Table with Fiscal and Academic Year   ", 
-            Code = " fn_Dates( 2021, 2023, 4,8, null, null ) ", 
-            Result
-              = "
- 1. Input paramaters
- 2. Invoke function
- 3. Optional: replace start / end year parameters with dynamic values to automatically extend table
- 
-"
-          ]
-        /* ,
-            [
-            Description = "  description   ",
-            Code    = " code ", 
-            Result  = " result #(cr,lf) new line
-                      #(cr,lf) new line #(cr,lf) 2 "
-            ] */
-        }
-      ], 
+     
       // ------------------------------------------------------------------
       // 5.0: Choose between Parameter Documentation or Function Documentation
       functionDocumentation =  // -- function metadata                       
@@ -1262,8 +1465,6 @@ let
     in
       // ------------------------------------------------------------------
       // select one of the above steps and paste below
-      parameterDocumentation /* <-- Choose final documentation type */                                         
+      functionDocumentation /* <-- Choose final documentation type */                                         
 in
   customFunction
-  
-  
