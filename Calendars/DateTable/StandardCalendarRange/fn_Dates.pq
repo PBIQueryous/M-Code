@@ -112,9 +112,91 @@ let
           ), 
           
           // start deriving columns here
+          
+          // like for like PY
+          like_for_like_records = let
+  previous_step = make_Table,
+  add_records_tbl = Table.AddColumn(
+    previous_step,
+    "lfl_records",
+    each
+      let
+        col_records = [
+          PY_like_for_like         = Date.AddDays([Date], - 364),
+          PY_minus_1_like_for_like = Date.AddDays([Date], - (364 * 2))
+        ]
+      in
+        col_records,
+    type [PY_like_for_like = Date.Type, PY_minus_1_like_for_like = Date.Type]
+  ),
+  get_headers = Record.FieldNames(add_records_tbl[lfl_records]{0}),
+  exp_record_fields = Table.ExpandRecordColumn(
+    add_records_tbl,
+    "lfl_records",
+    get_headers,
+    get_headers
+  )
+in
+  exp_record_fields,
 
+is_prev_ytd = Table.AddColumn(like_for_like_records, "IsPYTD", each 
+        let
+            
+            CurrentYear = Date.Year(var_CurrentDate),
+            PreviousYearDate = Date.AddYears([Date], -1),
+            StartOfCurrentYear = #date(CurrentYear, 1, 1),
+            IsPYTD = [Date] >= #date(CurrentYear - 1, 1, 1) and [Date] <= Date.From(Date.AddDays(var_CurrentDate, -365))
+        in
+            IsPYTD , type logical
+),
+is_previous_fytd = Table.AddColumn(is_prev_ytd, "IsPFYTD", each 
+        let
+            
+            CurrentYear = Date.Year(var_CurrentDate),
+            CurrentMonth = Date.Month(var_CurrentDate),
+            FiscalYearStartDate = #date(CurrentYear, FYStartMonth, 1),
+            PreviousFiscalYearStartDate = Date.AddYears(FiscalYearStartDate, -1),
+            PreviousFiscalYearEndDate = Date.AddDays(FiscalYearStartDate, -1),
+
+            // Adjust current fiscal year date range
+            StartOfFiscalYear = if CurrentMonth >= FYStartMonth 
+                                then FiscalYearStartDate 
+                                else Date.AddYears(FiscalYearStartDate, -1),
+
+            // Calculate the end date of PFYTD based on the current date in the previous fiscal year
+            EndOfPFYTD = Date.AddYears(var_CurrentDate, -1),
+
+            IsPFYTD = [Date] >= PreviousFiscalYearStartDate and [Date] <= EndOfPFYTD
+
+        in
+            IsPFYTD , type logical
+),
+is_previous_FMTD = Table.AddColumn(is_previous_fytd, "IsPFMTD", each 
+        let
+            CurrentDate = var_CurrentDate,
+            CurrentYear = Date.Year(CurrentDate),
+            CurrentMonth = Date.Month(CurrentDate),
+            FiscalYearStartMonth = 4, // April
+            FiscalYearStartDate = #date(CurrentYear, FYStartMonth, 1),
+            PreviousFiscalYearStartDate = Date.AddYears(FiscalYearStartDate, -1),
+            PreviousFiscalYearEndDate = Date.AddDays(FiscalYearStartDate, -1),
+
+            // Adjust current fiscal year date range
+            StartOfFiscalYear = if CurrentMonth >= FYStartMonth 
+                                then FiscalYearStartDate 
+                                else Date.AddYears(FiscalYearStartDate, -1),
+
+            // Calculate the end date of PFYTD based on the current date in the previous fiscal year
+            EndOfPMYTD = Date.EndOfMonth(Date.AddYears(CurrentDate, -1)),
+
+            IsPFMTD = [Date] >= PreviousFiscalYearStartDate and [Date] <= EndOfPMYTD
+
+        in
+            IsPFMTD , type logical
+),
+          
           // Year as integer
-          col_Year = Table.AddColumn(make_Table, "YearNUM", each Date.Year([Date]), type number),
+          col_Year = Table.AddColumn(is_previous_FMTD, "YearNUM", each Date.Year([Date]), type number),
 
           // calendar Year Offset 
           col_YearOFFSET = Table.AddColumn(
@@ -1152,6 +1234,7 @@ tbl_ouputs = tbl_biannually
 in tbl_ouputs,
 
 
+
 fiscal_academic_periods = let
      FY_TBL = Table.RenameColumns( Table.Group(  Table.Distinct( Table.SelectColumns(date_periods,{"Month Start", "Month End", "FiscalPeriodYearINT", "FiscalQuarterYearINT"}) , {"FiscalPeriodYearINT"}) , {"FiscalQuarterYearINT"}, {{"Fiscal Quarter Month Start", each List.Min([Month Start]), type date}, {"Fiscal Quarter Month End", each List.Max([Month End]), type date}}) ,{{"FiscalQuarterYearINT", "FiscalKey"}}),
      AY_TBL = Table.RenameColumns( Table.Group(  Table.Distinct( Table.SelectColumns(date_periods,{"Month Start", "Month End", "AcademicPeriodYearINT", "AcademicQuarterYearINT"}) , {"AcademicPeriodYearINT"}) , {"AcademicQuarterYearINT"}, {{"Academic Quarter Month Start", each List.Min([Month Start]), type date}, {"Academic Quarter Month End", each List.Max([Month End]), type date}}) ,{{"AcademicQuarterYearINT", "AcademicKey"}}),
@@ -1223,9 +1306,14 @@ in fiscal_academic_periods,
             cols_Format, 
             {
               "Date",
+              "PY_like_for_like",
+              "PY_minus_1_like_for_like",
               "CY Selection", 
               "isYearComplete", 
               "IsYTD",
+              "IsPYTD",
+              "IsPFYTD",
+              "IsPFMTD",
               "YearNUM", 
               "YearOFFSET", 
               "Academic Year",
@@ -1354,7 +1442,9 @@ in fiscal_academic_periods,
             "IsCurrentFP", 
             "IsCurrentFW", 
             "IsPreviousFY", 
-            "IsCurrentFY"
+            "IsCurrentFY",
+            "IsPFYTD",
+            "IsPFMTD"
           }, 
           AllCols = List.Union({FYCols, AYCols}), 
           ListCols = 
