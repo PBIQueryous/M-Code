@@ -1,0 +1,1 @@
+= Table.AddColumn(col_created_date_time_adj, "order_created_date_time_hour", each if [order_created_date_time] = null then null else DateTime.From(Number.From([order_created_date_time_adj]) - ( Time.Minute([order_created_date_time_adj]) / (60*24)) - ( Time.Second([order_created_date_time_adj]) / (3600*24))), type datetime)
