@@ -1,0 +1,1 @@
+= Table.AddColumn(col_addBST_DaylightSaving, "website_order_time_hour", each DateTime.From(Number.From([website_order_time_adj]) - ( Time.Minute([website_order_time_adj]) / (60*24)) - ( Time.Second([website_order_time_adj]) / (3600*24))), type datetime)
